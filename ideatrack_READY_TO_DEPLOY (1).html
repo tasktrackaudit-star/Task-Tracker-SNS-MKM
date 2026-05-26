@@ -1,0 +1,1582 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>IdeaTrack</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap');
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0e0f11;--surface:#16181c;--card:#1e2128;--card2:#252830;
+  --border:#2e313a;--border2:#3a3e4a;--text:#e8eaf2;--muted:#6b7080;--soft:#9499aa;
+  --gold:#d4a843;--gold2:#f0c96a;--teal:#3ecfb2;--red:#e05555;--blue:#4a90e2;--gdrive:#4285f4;
+  --purple:#a855f7;--shadow:0 4px 24px rgba(0,0,0,.4);--shadow-lg:0 12px 48px rgba(0,0,0,.6);
+  font-family:'DM Sans',sans-serif;
+}
+body{background:var(--bg);color:var(--text);min-height:100vh}
+::-webkit-scrollbar{width:4px}::-webkit-scrollbar-thumb{background:var(--border2);border-radius:4px}
+.btn{display:inline-flex;align-items:center;gap:7px;padding:10px 20px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:500;transition:all .18s;font-family:'DM Sans',sans-serif;letter-spacing:.01em}
+.btn-primary{background:var(--gold);color:#0e0f11}.btn-primary:hover{background:var(--gold2);transform:translateY(-1px);box-shadow:0 6px 20px rgba(212,168,67,.3)}
+.btn-ghost{background:transparent;color:var(--soft);border:1px solid var(--border2)}.btn-ghost:hover{border-color:var(--gold);color:var(--gold)}
+.btn-surface{background:var(--card2);color:var(--text);border:1px solid var(--border)}.btn-surface:hover{border-color:var(--border2);background:#2a2e38}
+.btn-danger{background:rgba(224,85,85,.12);color:var(--red);border:1px solid rgba(224,85,85,.3)}.btn-danger:hover{background:var(--red);color:#fff}
+.btn-gdrive{background:var(--gdrive);color:#fff}.btn-gdrive:hover{background:#3367d6;transform:translateY(-1px)}
+.btn-teal{background:rgba(62,207,178,.15);color:var(--teal);border:1px solid rgba(62,207,178,.3)}.btn-teal:hover{background:var(--teal);color:#0e0f11}
+.btn-purple{background:rgba(168,85,247,.15);color:var(--purple);border:1px solid rgba(168,85,247,.3)}.btn-purple:hover{background:var(--purple);color:#fff}
+.btn-lg{padding:13px 28px;font-size:15px;font-weight:600;border-radius:10px}
+.btn-block{width:100%;justify-content:center}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);margin-bottom:7px}
+.input{width:100%;background:var(--card);border:1.5px solid var(--border);color:var(--text);padding:11px 14px;font-size:14px;border-radius:8px;font-family:'DM Sans',sans-serif;outline:none;transition:border-color .15s,box-shadow .15s}
+.input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(212,168,67,.1)}
+.input::placeholder{color:var(--muted)}
+.input-icon{position:relative}.input-icon .input{padding-left:40px}.input-icon .icon{position:absolute;left:13px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px}
+textarea.input{resize:none;min-height:90px}
+select.input{cursor:pointer}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:200;padding:16px;backdrop-filter:blur(4px)}
+.overlay.hidden{display:none}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;width:100%;max-width:500px;max-height:92vh;overflow-y:auto;box-shadow:var(--shadow-lg);animation:modalIn .22s ease}
+@keyframes modalIn{from{transform:translateY(16px) scale(.97);opacity:0}to{transform:none;opacity:1}}
+.modal-sm{max-width:380px}.modal-lg{max-width:680px}
+.topbar{height:58px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 24px;position:sticky;top:0;z-index:50}
+.logo{font-family:'DM Serif Display',serif;font-size:20px;color:var(--gold);display:flex;align-items:center;gap:8px}
+.avatar{width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0;color:#0e0f11}
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-gold{background:rgba(212,168,67,.15);color:var(--gold);border:1px solid rgba(212,168,67,.3)}
+.badge-teal{background:rgba(62,207,178,.12);color:var(--teal);border:1px solid rgba(62,207,178,.25)}
+.badge-red{background:rgba(224,85,85,.12);color:var(--red);border:1px solid rgba(224,85,85,.25)}
+.badge-blue{background:rgba(74,144,226,.12);color:var(--blue);border:1px solid rgba(74,144,226,.25)}
+.badge-purple{background:rgba(168,85,247,.12);color:var(--purple);border:1px solid rgba(168,85,247,.25)}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:6px;font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;cursor:pointer;border:1.5px solid transparent;transition:all .12s;user-select:none}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--border2);color:var(--text);padding:12px 22px;border-radius:10px;font-size:13px;z-index:500;white-space:nowrap;box-shadow:var(--shadow);display:none;animation:toastPop .2s ease}
+@keyframes toastPop{from{transform:translateX(-50%) translateY(8px);opacity:0}to{transform:translateX(-50%) translateY(0);opacity:1}}
+.page{display:none;min-height:100vh}.page.active{display:block}
+.auth-wrap{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;position:relative;overflow:hidden}
+.auth-wrap::before{content:'';position:absolute;width:600px;height:600px;background:radial-gradient(circle,rgba(212,168,67,.06) 0%,transparent 70%);top:-200px;left:-200px;pointer-events:none}
+.auth-wrap::after{content:'';position:absolute;width:500px;height:500px;background:radial-gradient(circle,rgba(62,207,178,.04) 0%,transparent 70%);bottom:-200px;right:-200px;pointer-events:none}
+.auth-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:40px;width:100%;max-width:420px;box-shadow:var(--shadow-lg);position:relative;z-index:1}
+.auth-logo{text-align:center;margin-bottom:32px}
+.auth-logo .icon{font-size:44px;margin-bottom:10px;display:block}
+.auth-logo h1{font-family:'DM Serif Display',serif;font-size:30px;color:var(--gold)}
+.auth-logo p{font-size:13px;color:var(--muted);margin-top:4px}
+.divider{border:none;border-top:1px solid var(--border);margin:18px 0}
+.spinner{width:18px;height:18px;border:2px solid var(--border2);border-top-color:var(--gold);border-radius:50%;animation:spin .65s linear infinite;display:inline-block;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.note-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;margin-bottom:10px;transition:all .18s;position:relative}
+.note-card:hover{border-color:var(--border2);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.note-card.pinned{border-color:rgba(212,168,67,.4);background:rgba(212,168,67,.04)}
+.proj-item{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:8px;cursor:pointer;transition:all .18s;display:flex;align-items:center;justify-content:space-between}
+.proj-item:hover{border-color:var(--gold);transform:translateX(3px);box-shadow:0 4px 20px rgba(0,0,0,.3)}
+.search-bar{display:flex;align-items:center;gap:10px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:10px 14px;margin-bottom:16px;transition:border-color .15s}
+.search-bar:focus-within{border-color:var(--border2)}
+.search-bar input{border:none;background:transparent;color:var(--text);font-size:14px;outline:none;width:100%;font-family:'DM Sans',sans-serif}
+.search-bar input::placeholder{color:var(--muted)}
+.progress{height:3px;background:var(--border);border-radius:2px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--teal));border-radius:2px;transition:width .4s}
+.menu-popup{position:absolute;right:8px;top:44px;background:var(--card2);border:1px solid var(--border2);border-radius:10px;padding:6px;z-index:30;min-width:160px;box-shadow:var(--shadow)}
+.menu-item{padding:9px 13px;font-size:13px;cursor:pointer;border-radius:7px;transition:background .1s;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:8px;color:var(--soft)}
+.menu-item:hover{background:var(--border);color:var(--text)}
+.menu-item.danger{color:var(--red)}.menu-item.danger:hover{background:rgba(224,85,85,.12)}
+.canvas-wrap{border:1px solid var(--border);border-radius:10px;overflow:hidden;cursor:crosshair;background:#fff;touch-action:none;width:100%;display:block}
+.audio-note{background:var(--card2);border-radius:8px;padding:12px 14px;margin-top:10px}
+audio{filter:invert(1) hue-rotate(180deg);border-radius:6px}
+.note-img{border-radius:8px;max-width:100%;border:1px solid var(--border);margin-top:10px;display:block}
+.ts{font-size:11px;color:var(--muted);font-family:'Syne',sans-serif}
+.wavebar{display:inline-block;width:3px;border-radius:2px;background:var(--teal);animation:wave 1s ease infinite}
+@keyframes wave{0%,100%{height:4px}50%{height:22px}}
+.rec-dot{width:10px;height:10px;border-radius:50%;background:var(--red);display:inline-block;animation:blink .8s ease infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.15}}
+.empty{text-align:center;padding:64px 24px;color:var(--muted)}
+.empty .icon{font-size:48px;display:block;margin-bottom:14px;opacity:.5}
+.empty h3{font-family:'Syne',sans-serif;font-size:16px;color:var(--soft);margin-bottom:6px}
+.err-box{background:rgba(224,85,85,.1);border:1px solid rgba(224,85,85,.3);border-radius:8px;padding:12px 14px;font-size:13px;color:var(--red);margin-bottom:14px;display:none}
+.info-box{background:rgba(74,144,226,.1);border:1px solid rgba(74,144,226,.25);border-radius:10px;padding:14px 16px;font-size:13px;color:#8ab8f0;line-height:1.7}
+.gdrive-strip{display:flex;align-items:center;gap:12px;background:rgba(66,133,244,.08);border:1px solid rgba(66,133,244,.2);border-radius:10px;padding:12px 16px;margin-bottom:18px}
+.gdrive-connected{border-color:rgba(62,207,178,.25);background:rgba(62,207,178,.06)}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:480px){.grid-2{grid-template-columns:1fr}}
+/* ── Activity log ── */
+.activity-feed{display:flex;flex-direction:column;gap:0}
+.activity-row{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--border)}
+.activity-row:last-child{border-bottom:none}
+.activity-line{width:2px;background:var(--border);flex-shrink:0;align-self:stretch;margin-top:4px;border-radius:1px}
+.activity-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;margin-top:4px}
+/* ── Share chip ── */
+.share-chip{display:inline-flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border2);border-radius:8px;padding:7px 12px;font-size:12px;margin-bottom:6px}
+/* ── Admin ── */
+.admin-section{background:var(--card);border:1px solid var(--border);border-radius:14px;padding:22px;margin-bottom:16px}
+.admin-section h3{font-family:'Syne',sans-serif;font-size:14px;color:var(--soft);text-transform:uppercase;letter-spacing:.07em;margin-bottom:16px}
+.stat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:20px}
+.stat-card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:18px 20px;position:relative;overflow:hidden;transition:border-color .2s,transform .2s}
+.stat-card:hover{border-color:var(--border2);transform:translateY(-2px)}
+.stat-card .stat-icon{font-size:22px;margin-bottom:10px}
+.stat-card .stat-value{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;color:var(--text);line-height:1}
+.stat-card .stat-label{font-size:11px;color:var(--muted);margin-top:5px;text-transform:uppercase;letter-spacing:.06em;font-weight:600}
+.stat-card .stat-glow{position:absolute;top:-20px;right:-20px;width:70px;height:70px;border-radius:50%;opacity:.12}
+.stat-card.gold-card{border-color:rgba(212,168,67,.2)}.stat-card.gold-card .stat-glow{background:var(--gold)}
+.stat-card.teal-card{border-color:rgba(62,207,178,.2)}.stat-card.teal-card .stat-glow{background:var(--teal)}
+.stat-card.blue-card{border-color:rgba(74,144,226,.2)}.stat-card.blue-card .stat-glow{background:var(--blue)}
+.stat-card.red-card{border-color:rgba(224,85,85,.2)}.stat-card.red-card .stat-glow{background:var(--red)}
+.admin-table{width:100%;border-collapse:collapse;font-size:13px}
+.admin-table th{text-align:left;padding:10px 14px;font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.07em;border-bottom:1px solid var(--border);font-family:'Syne',sans-serif}
+.admin-table td{padding:12px 14px;border-bottom:1px solid var(--border);vertical-align:middle;color:var(--soft)}
+.admin-table tr:last-child td{border-bottom:none}
+.admin-table tr:hover td{background:rgba(255,255,255,.02)}
+.donut-wrap{display:flex;align-items:center;gap:20px;flex-wrap:wrap}
+.donut-legend{flex:1;min-width:140px}
+.donut-legend-item{display:flex;align-items:center;gap:8px;margin-bottom:8px;font-size:12px;color:var(--soft)}
+.donut-legend-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.admin-tabs{display:flex;gap:4px;margin-bottom:20px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:4px;flex-wrap:wrap}
+.admin-tab{flex:1;text-align:center;padding:8px 10px;border-radius:7px;font-size:11px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .15s;font-family:'Syne',sans-serif;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.admin-tab.active{background:var(--card2);color:var(--gold);border:1px solid var(--border2)}
+.admin-tab-panel{display:none}.admin-tab-panel.active{display:block}
+/* ── Notes page tabs ── */
+.notes-tabs{display:flex;gap:4px;margin-bottom:18px;background:var(--card);border:1px solid var(--border);border-radius:10px;padding:4px}
+.notes-tab{flex:1;text-align:center;padding:8px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .15s;font-family:'Syne',sans-serif}
+.notes-tab.active{background:var(--card2);color:var(--gold);border:1px solid var(--border2)}
+</style>
+</head>
+<body>
+
+<!-- ═══ PAGE: LOGIN ═══ -->
+<div id="pg-login" class="page active">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <span class="icon">💡</span>
+        <h1>IdeaTrack</h1>
+        <p>Capture · Collaborate · Execute</p>
+      </div>
+      <div id="login-panel">
+        <div class="field"><label>Email Address</label>
+          <div class="input-icon"><span class="icon">✉</span>
+            <input id="login-email" class="input" type="email" placeholder="you@company.com" onkeydown="if(event.key==='Enter')document.getElementById('login-pwd').focus()"/>
+          </div>
+        </div>
+        <div class="field"><label>Password</label>
+          <div class="input-icon"><span class="icon">🔒</span>
+            <input id="login-pwd" class="input" type="password" placeholder="••••••••" onkeydown="if(event.key==='Enter')doLogin()"/>
+          </div>
+        </div>
+        <div id="login-err" class="err-box"></div>
+        <button class="btn btn-primary btn-lg btn-block" onclick="doLogin()" id="login-btn">Sign In</button>
+        <div style="display:flex;justify-content:space-between;margin-top:14px;font-size:13px">
+          <span style="color:var(--muted);cursor:pointer" onclick="showForgot()">Forgot password?</span>
+          <span style="color:var(--gold);cursor:pointer" onclick="showRegister()">Create account →</span>
+        </div>
+      </div>
+      <div id="register-panel" style="display:none">
+        <div class="grid-2">
+          <div class="field"><label>First Name *</label><input id="reg-fname" class="input" placeholder="Raj"/></div>
+          <div class="field"><label>Last Name</label><input id="reg-lname" class="input" placeholder="Mehta"/></div>
+        </div>
+        <div class="field"><label>Email *</label><div class="input-icon"><span class="icon">✉</span><input id="reg-email" class="input" type="email" placeholder="you@company.com"/></div></div>
+        <div class="field"><label>Password * <span style="color:var(--muted);font-weight:400;text-transform:none">(min 6 chars)</span></label>
+          <div class="input-icon"><span class="icon">🔒</span><input id="reg-pwd" class="input" type="password" placeholder="Min 6 characters"/></div>
+        </div>
+        <div class="field"><label>Confirm Password *</label>
+          <div class="input-icon"><span class="icon">🔒</span><input id="reg-pwd2" class="input" type="password" placeholder="Re-enter password" onkeydown="if(event.key==='Enter')doRegister()"/></div>
+        </div>
+        <div id="reg-err" class="err-box"></div>
+        <button class="btn btn-primary btn-lg btn-block" onclick="doRegister()">Create Account</button>
+        <div style="text-align:center;margin-top:14px;font-size:13px"><span style="color:var(--muted);cursor:pointer" onclick="showLogin()">← Back to Login</span></div>
+      </div>
+      <div id="forgot-panel" style="display:none">
+        <div style="text-align:center;margin-bottom:20px">
+          <span style="font-size:36px;display:block;margin-bottom:10px">📬</span>
+          <h3 style="font-family:'Syne',sans-serif;margin-bottom:6px">Reset Password</h3>
+          <p style="font-size:13px;color:var(--muted)">We'll email you a reset link</p>
+        </div>
+        <div class="field"><label>Email Address</label>
+          <div class="input-icon"><span class="icon">✉</span><input id="forgot-email" class="input" type="email" placeholder="you@company.com" onkeydown="if(event.key==='Enter')doForgot()"/></div>
+        </div>
+        <div id="forgot-err" class="err-box"></div>
+        <div id="forgot-ok" style="display:none;background:rgba(62,207,178,.1);border:1px solid rgba(62,207,178,.3);border-radius:8px;padding:12px;font-size:13px;color:var(--teal);margin-bottom:14px"></div>
+        <button class="btn btn-primary btn-lg btn-block" onclick="doForgot()">Send Reset Link</button>
+        <div style="text-align:center;margin-top:14px;font-size:13px"><span style="color:var(--muted);cursor:pointer" onclick="showLogin()">← Back to Login</span></div>
+      </div>
+      <!-- ── NEW: Reset password panel (shown when user arrives via email link) ── -->
+      <div id="reset-panel" style="display:none">
+        <div style="text-align:center;margin-bottom:20px">
+          <span style="font-size:36px;display:block;margin-bottom:10px">🔐</span>
+          <h3 style="font-family:'Syne',sans-serif;margin-bottom:6px">Set New Password</h3>
+          <p style="font-size:13px;color:var(--muted)">Enter your new password below</p>
+        </div>
+        <div class="field"><label>New Password *</label>
+          <div class="input-icon"><span class="icon">🔒</span><input id="reset-pwd" class="input" type="password" placeholder="Min 6 characters"/></div>
+        </div>
+        <div class="field"><label>Confirm New Password *</label>
+          <div class="input-icon"><span class="icon">🔒</span><input id="reset-pwd2" class="input" type="password" placeholder="Re-enter password" onkeydown="if(event.key==='Enter')doResetPassword()"/></div>
+        </div>
+        <div id="reset-err" class="err-box"></div>
+        <div id="reset-ok" style="display:none;background:rgba(62,207,178,.1);border:1px solid rgba(62,207,178,.3);border-radius:8px;padding:12px;font-size:13px;color:var(--teal);margin-bottom:14px"></div>
+        <button class="btn btn-primary btn-lg btn-block" onclick="doResetPassword()" id="reset-btn">Update Password</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: PROJECTS ═══ -->
+<div id="pg-projects" class="page">
+  <div class="topbar">
+    <div class="logo">💡 IdeaTrack</div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <div id="proj-gdrive-badge" style="display:none" class="badge badge-teal">☁️ Drive</div>
+      <div style="display:flex;align-items:center;gap:8px;cursor:pointer" onclick="showUserMenu()">
+        <div id="proj-avatar" class="avatar"></div>
+        <span id="proj-uname" style="font-size:13px;font-weight:500;color:var(--soft)"></span>
+        <span style="color:var(--muted);font-size:11px">▾</span>
+      </div>
+    </div>
+  </div>
+  <div style="max-width:720px;margin:0 auto;padding:28px 20px 60px">
+    <div id="proj-drive-strip" style="display:none" class="gdrive-strip">
+      <span style="font-size:20px">☁️</span>
+      <div style="flex:1"><div id="proj-drive-label" style="font-size:13px;font-weight:600"></div><div id="proj-drive-sub" style="font-size:12px;color:var(--muted);margin-top:2px"></div></div>
+      <button id="proj-drive-btn" class="btn" style="font-size:12px;padding:7px 14px"></button>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <h2 style="font-family:'Syne',sans-serif;font-size:22px">My Projects</h2>
+      <button class="btn btn-primary" onclick="showCreateProj()">+ New Project</button>
+    </div>
+    <div class="search-bar">
+      <span style="color:var(--muted);font-size:16px">⌕</span>
+      <input id="proj-search" placeholder="Search projects…" oninput="renderProjects()"/>
+    </div>
+    <div id="proj-list"><div class="empty"><span class="spinner"></span></div></div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: NOTES ═══ -->
+<div id="pg-notes" class="page">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn btn-ghost" style="padding:7px 13px;font-size:13px" onclick="goBack()">← Back</button>
+      <h2 id="notes-title" style="font-family:'Syne',sans-serif;font-size:17px"></h2>
+      <span id="notes-shared-badge" style="display:none" class="badge badge-purple">👥 Shared</span>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div id="notes-gdrive-badge" style="display:none" class="badge badge-teal">☁️ Drive</div>
+      <button id="notes-share-btn" class="btn btn-purple" style="font-size:12px;padding:7px 14px;display:none" onclick="showShareModal()">👥 Share</button>
+      <span id="notes-count" style="font-size:12px;color:var(--muted)"></span>
+    </div>
+  </div>
+  <div style="max-width:700px;margin:0 auto;padding:24px 20px 60px">
+    <button id="add-note-btn" class="btn btn-primary btn-lg btn-block" style="margin-bottom:18px;border-radius:12px;padding:16px" onclick="showAddNote()">
+      + Add Note
+    </button>
+    <!-- Notes/Activity tabs -->
+    <div class="notes-tabs">
+      <div class="notes-tab active" onclick="switchNotesTab('notes',this)">📝 Notes</div>
+      <div class="notes-tab" onclick="switchNotesTab('activity',this)">📋 Activity Log</div>
+    </div>
+    <!-- Notes panel -->
+    <div id="notes-panel">
+      <div class="search-bar"><span style="color:var(--muted);font-size:16px">⌕</span><input id="notes-search" placeholder="Search notes…" oninput="renderNotes()"/></div>
+      <div id="tag-filter" style="display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap"></div>
+      <div id="notes-list"></div>
+    </div>
+    <!-- Activity panel -->
+    <div id="activity-panel" style="display:none">
+      <div id="activity-feed-list"><div class="empty"><span class="spinner"></span></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ PAGE: ADMIN ═══ -->
+<div id="pg-admin" class="page">
+  <div class="topbar">
+    <div style="display:flex;align-items:center;gap:12px">
+      <button class="btn btn-ghost" style="padding:7px 13px;font-size:13px" onclick="showPage('projects')">← Back</button>
+      <div class="logo" style="font-size:17px">⚙️ Admin Dashboard</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:10px">
+      <button class="btn btn-surface" style="font-size:12px;padding:7px 14px" onclick="loadAdminDashboard()">↻ Refresh</button>
+      <div style="font-size:12px;color:var(--muted)" id="adm-refresh-ts"></div>
+    </div>
+  </div>
+  <div style="max-width:960px;margin:0 auto;padding:28px 20px 60px">
+    <div class="stat-grid">
+      <div class="stat-card gold-card"><div class="stat-glow"></div><div class="stat-icon">👥</div><div class="stat-value" id="adm-s-users">—</div><div class="stat-label">Total Users</div></div>
+      <div class="stat-card teal-card"><div class="stat-glow"></div><div class="stat-icon">📂</div><div class="stat-value" id="adm-s-projects">—</div><div class="stat-label">Total Projects</div></div>
+      <div class="stat-card blue-card"><div class="stat-glow"></div><div class="stat-icon">📝</div><div class="stat-value" id="adm-s-notes">—</div><div class="stat-label">Total Notes</div></div>
+      <div class="stat-card red-card"><div class="stat-glow"></div><div class="stat-icon">☁️</div><div class="stat-value" id="adm-s-drive">—</div><div class="stat-label">Drive-Linked</div></div>
+      <div class="stat-card gold-card"><div class="stat-glow"></div><div class="stat-icon">📌</div><div class="stat-value" id="adm-s-pinned">—</div><div class="stat-label">Pinned Notes</div></div>
+      <div class="stat-card teal-card"><div class="stat-glow"></div><div class="stat-icon">🎤</div><div class="stat-value" id="adm-s-audio">—</div><div class="stat-label">Voice Notes</div></div>
+      <div class="stat-card blue-card"><div class="stat-glow"></div><div class="stat-icon">👥</div><div class="stat-value" id="adm-s-shares">—</div><div class="stat-label">Shared Projects</div></div>
+      <div class="stat-card red-card"><div class="stat-glow"></div><div class="stat-icon">📋</div><div class="stat-value" id="adm-s-activity">—</div><div class="stat-label">Activity Logs</div></div>
+    </div>
+    <div class="admin-tabs">
+      <div class="admin-tab active" onclick="switchAdminTab('users',this)">👥 Users</div>
+      <div class="admin-tab" onclick="switchAdminTab('projects',this)">📂 Projects</div>
+      <div class="admin-tab" onclick="switchAdminTab('notes',this)">📝 Notes</div>
+      <div class="admin-tab" onclick="switchAdminTab('tags',this)">🏷️ Analytics</div>
+      <div class="admin-tab" onclick="switchAdminTab('settings',this)">⚙️ Settings</div>
+    </div>
+    <div id="adm-tab-users" class="admin-tab-panel active">
+      <div class="admin-section"><h3>All Users</h3><div style="overflow-x:auto">
+        <table class="admin-table"><thead><tr><th>User</th><th>Email</th><th>Role</th><th>Drive</th><th>Projects</th><th>Notes</th><th>Joined</th></tr></thead>
+        <tbody id="adm-users-body"><tr><td colspan="7" style="text-align:center;padding:24px"><span class="spinner"></span></td></tr></tbody>
+        </table></div></div>
+    </div>
+    <div id="adm-tab-projects" class="admin-tab-panel">
+      <div class="admin-section"><h3>All Projects</h3><div style="overflow-x:auto">
+        <table class="admin-table"><thead><tr><th>Project</th><th>Owner</th><th>Shared With</th><th>Notes</th><th>Created</th></tr></thead>
+        <tbody id="adm-projects-body"><tr><td colspan="5" style="text-align:center;padding:24px"><span class="spinner"></span></td></tr></tbody>
+        </table></div></div>
+    </div>
+    <div id="adm-tab-notes" class="admin-tab-panel">
+      <div class="admin-section"><h3>Recent Notes (Last 30)</h3><div style="overflow-x:auto">
+        <table class="admin-table"><thead><tr><th>Author</th><th>Project</th><th>Preview</th><th>Tags</th><th>Attachments</th><th>Created</th></tr></thead>
+        <tbody id="adm-notes-body"><tr><td colspan="6" style="text-align:center;padding:24px"><span class="spinner"></span></td></tr></tbody>
+        </table></div></div>
+    </div>
+    <div id="adm-tab-tags" class="admin-tab-panel">
+      <div class="admin-section"><h3>Tag Distribution</h3><div id="adm-tag-chart" style="display:flex;gap:28px;flex-wrap:wrap;align-items:center"><span class="spinner"></span></div></div>
+      <div class="admin-section"><h3>Notes per Project (Top 10)</h3><div id="adm-proj-bars"></div></div>
+    </div>
+    <div id="adm-tab-settings" class="admin-tab-panel">
+      <div class="admin-section">
+        <h3>☁️ Google Drive Settings</h3>
+        <div class="field"><label>Team Drive Folder Link</label><input id="adm-gdrive-folder" class="input" type="url" placeholder="https://drive.google.com/drive/folders/…"/><div style="font-size:12px;color:var(--muted);margin-top:6px">Voice recordings and drawings from all users will upload to this folder.</div></div>
+        <div class="field"><label>Google OAuth Client ID</label><input id="adm-gcid" class="input" placeholder="1234567890-xxxx.apps.googleusercontent.com"/><div style="font-size:12px;color:var(--muted);margin-top:6px">Create at <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color:var(--blue)">Google Cloud Console ↗</a></div></div>
+        <div id="adm-drive-ok" style="display:none;background:rgba(62,207,178,.1);border:1px solid rgba(62,207,178,.3);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--teal);margin-bottom:12px"></div>
+        <div id="adm-drive-err" class="err-box"></div>
+        <button class="btn btn-primary" onclick="saveAdminDriveSettings()">💾 Save Drive Settings</button>
+      </div>
+      <div class="admin-section">
+        <h3>👤 User Role Management</h3>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px">Promote or demote users between <strong style="color:var(--gold)">admin</strong> and <strong style="color:var(--blue)">user</strong> roles.</div>
+        <div id="adm-role-list"><div style="text-align:center;padding:16px"><span class="spinner"></span></div></div>
+      </div>
+      <div class="admin-section" style="border-color:rgba(224,85,85,.25)">
+        <h3 style="color:var(--red)">⚠️ Danger Zone</h3>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px">These actions cannot be undone.</div>
+        <div style="display:flex;gap:10px;flex-wrap:wrap">
+          <button class="btn btn-danger" onclick="confirmDeleteAllNotes()">🗑 Delete All Notes</button>
+          <button class="btn btn-danger" onclick="confirmDeleteAllProjects()">🗑 Delete All Projects</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="main-overlay" class="overlay hidden" onclick="overlayBg(event)"><div id="modal-box" class="modal"></div></div>
+<div id="toast" class="toast"></div>
+
+<script>
+/* ════════════════════════════════════
+   CONFIG
+════════════════════════════════════ */
+const SUPABASE_URL  = "https://jhgtdhlcoltpgytupmqx.supabase.co";
+const SUPABASE_KEY  = "sb_publishable_OAJgWAxQaTKEMX_iijhotg_bjoz5sBb";
+const GDRIVE_FOLDER = "https://drive.google.com/drive/u/0/folders/1cnYL6VVNNyH4iI2ZCOQU3ahtH0abIxza";
+
+/* ════════════════════════════════════
+   STATE
+════════════════════════════════════ */
+let sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+  auth: {
+    persistSession: true,
+    storageKey: 'ideatrack_session',
+    storage: window.localStorage,
+    autoRefreshToken: true,
+    detectSessionInUrl: true,
+  }
+});
+let CFG = { sbUrl:SUPABASE_URL, sbKey:SUPABASE_KEY, gcId:"" };
+let USER = null, ACTIVE_PROJECT = null;
+let PROJECTS = [], NOTES = [], ACTIVE_TAG = null, NOTE_CHANNEL = null;
+let _drawCtx=null,_drawing=false,_lastPos=null,_drawColor="#1e2128",_drawSize=3;
+let _mediaRecorder=null,_audioChunks=[],_recTimer=null,_recSec=0;
+let _resolvedAudioUrl=null,_resolvedDrawingUrl=null,_selectedTags=[];
+let _adminData={};
+
+const TAG_COLORS={
+  Meeting:{bg:"rgba(74,144,226,.15)",color:"#7eb8f5",border:"rgba(74,144,226,.35)"},
+  Idea:   {bg:"rgba(212,168,67,.12)",color:"#d4a843",border:"rgba(212,168,67,.3)"},
+  Task:   {bg:"rgba(62,207,178,.12)",color:"#3ecfb2",border:"rgba(62,207,178,.3)"},
+  Urgent: {bg:"rgba(224,85,85,.12)", color:"#e05555",border:"rgba(224,85,85,.3)"},
+};
+const TAG_LIST = Object.keys(TAG_COLORS);
+const AV_COLORS = ["#d4a843","#3ecfb2","#e05555","#4a90e2","#a855f7","#e07855"];
+
+const avColor  = n => AV_COLORS[(n||"A").charCodeAt(0) % AV_COLORS.length];
+const initials = n => (n||"?").split(" ").map(w=>w[0]).join("").toUpperCase().slice(0,2);
+const uid      = () => Math.random().toString(36).slice(2,9);
+const escHtml  = s => (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+const fmtDT    = dt => { const d=new Date(dt); return d.toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})+" · "+d.toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"}); };
+const fmtDate  = dt => new Date(dt).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"});
+
+let _toastT;
+function toast(msg,dur=2800){ const el=document.getElementById("toast"); el.textContent=msg; el.style.display="block"; clearTimeout(_toastT); _toastT=setTimeout(()=>el.style.display="none",dur); }
+
+function openModal(html,cls=""){ const box=document.getElementById("modal-box"); box.className="modal "+(cls||""); box.innerHTML=html; document.getElementById("main-overlay").classList.remove("hidden"); }
+function closeModal(){ document.getElementById("main-overlay").classList.add("hidden"); }
+function overlayBg(e){ if(e.target===document.getElementById("main-overlay")) closeModal(); }
+
+function showPage(name){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("pg-"+name).classList.add("active");
+  if(name==="projects") initProjectsPage();
+  if(name==="notes")    initNotesPage();
+  if(name==="admin")    loadAdminDashboard();
+}
+
+/* ════════════════════════════════════
+   AUTO-INIT — IMPROVED SESSION MANAGEMENT
+   (Inspired by task-tracker's reliable approach)
+════════════════════════════════════ */
+let _authInitialized = false;
+
+window.addEventListener("DOMContentLoaded", async () => {
+  if (_authInitialized) return;
+  _authInitialized = true;
+
+  // Check URL hash for Supabase auth events (password recovery)
+  const hash = window.location.hash;
+  if (hash.includes("type=recovery") || hash.includes("access_token")) {
+    const { data: { session }, error } = await sb.auth.getSession();
+    if (session && hash.includes("type=recovery")) {
+      showResetPanel();
+      return;
+    }
+  }
+
+  // Listen for auth state changes
+  sb.auth.onAuthStateChange(async (event, session) => {
+    console.log("Auth state change:", event);
+    if (event === "PASSWORD_RECOVERY") {
+      showResetPanel();
+    } else if (event === "TOKEN_REFRESHED") {
+      console.log("Token refreshed successfully");
+    }
+  });
+
+  // IMPROVED: Simple localStorage-based session restoration
+  try {
+    const savedUserId = localStorage.getItem('ideatrack_session');
+    
+    if (savedUserId) {
+      // Try to restore session from saved user ID
+      try {
+        const { data: profileData } = await sb.from("it_user_profiles").select("*").eq("id", savedUserId).single();
+        
+        if (profileData) {
+          // User exists in database - restore session
+          const { data: authData, error: authError } = await sb.auth.getSession();
+          
+          if (authData?.session) {
+            // Valid Supabase session exists
+            USER = {
+              id: savedUserId,
+              email: authData.session.user.email,
+              display_name: profileData.display_name || authData.session.user.email.split("@")[0],
+              role: profileData.role || "user",
+              gdrive_linked: profileData.gdrive_linked || false,
+              gdrive_access_token: profileData.gdrive_access_token || null
+            };
+            showPage("projects");
+            loadBackgroundData();
+            return;
+          } else {
+            // Supabase session expired but user exists - try to refresh
+            const { data: refreshData } = await sb.auth.refreshSession();
+            if (refreshData?.session) {
+              USER = {
+                id: savedUserId,
+                email: refreshData.session.user.email,
+                display_name: profileData.display_name || refreshData.session.user.email.split("@")[0],
+                role: profileData.role || "user",
+                gdrive_linked: profileData.gdrive_linked || false,
+                gdrive_access_token: profileData.gdrive_access_token || null
+              };
+              showPage("projects");
+              loadBackgroundData();
+              return;
+            }
+          }
+        }
+        
+        // If we get here, session is invalid - clear it
+        localStorage.removeItem('ideatrack_session');
+      } catch (err) {
+        console.log("Session restore failed:", err);
+        localStorage.removeItem('ideatrack_session');
+      }
+    }
+    
+    // No saved session or restore failed - show login
+    showPage("login");
+    
+  } catch (e) {
+    console.error("Auth initialization error:", e);
+    showPage("login");
+  }
+});
+
+function showResetPanel(){
+  document.querySelectorAll(".page").forEach(p=>p.classList.remove("active"));
+  document.getElementById("pg-login").classList.add("active");
+  document.getElementById("login-panel").style.display="none";
+  document.getElementById("register-panel").style.display="none";
+  document.getElementById("forgot-panel").style.display="none";
+  document.getElementById("reset-panel").style.display="block";
+  // Clear the hash so it doesn't persist
+  history.replaceState(null, "", window.location.pathname);
+}
+
+async function doResetPassword(){
+  const pwd  = document.getElementById("reset-pwd").value;
+  const pwd2 = document.getElementById("reset-pwd2").value;
+  const errEl= document.getElementById("reset-err");
+  const okEl = document.getElementById("reset-ok");
+  const btn  = document.getElementById("reset-btn");
+  errEl.style.display="none"; okEl.style.display="none";
+  if(!pwd||pwd.length<6){ errEl.textContent="Password must be at least 6 characters."; errEl.style.display="block"; return; }
+  if(pwd!==pwd2){ errEl.textContent="Passwords do not match."; errEl.style.display="block"; return; }
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Updating…';
+  try {
+    const { error } = await sb.auth.updateUser({ password: pwd });
+    if(error) throw error;
+    okEl.textContent = "✅ Password updated successfully! Redirecting to login…";
+    okEl.style.display = "block";
+    setTimeout(() => { showLogin(); document.getElementById("reset-panel").style.display="none"; }, 2500);
+  } catch(e) {
+    errEl.textContent = e.message; errEl.style.display="block";
+  }
+  btn.disabled=false; btn.innerHTML="Update Password";
+}
+
+/* ════════════════════════════════════
+   AUTH
+════════════════════════════════════ */
+function showLogin()    { document.getElementById("login-panel").style.display="block"; document.getElementById("register-panel").style.display="none"; document.getElementById("forgot-panel").style.display="none"; document.getElementById("reset-panel").style.display="none"; }
+function showRegister() { document.getElementById("login-panel").style.display="none"; document.getElementById("register-panel").style.display="block"; document.getElementById("forgot-panel").style.display="none"; document.getElementById("reset-panel").style.display="none"; }
+function showForgot()   { document.getElementById("login-panel").style.display="none"; document.getElementById("register-panel").style.display="none"; document.getElementById("forgot-panel").style.display="block"; document.getElementById("reset-panel").style.display="none"; }
+
+async function doLogin(){
+  const email=document.getElementById("login-email").value.trim();
+  const pwd=document.getElementById("login-pwd").value;
+  const errEl=document.getElementById("login-err");
+  const btn=document.getElementById("login-btn");
+  errEl.style.display="none";
+  if(!email||!pwd){ errEl.textContent="Enter email and password."; errEl.style.display="block"; return; }
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Signing in…';
+  try{
+    const {data,error}=await sb.auth.signInWithPassword({email,password:pwd});
+    if(error) throw error;
+    
+    // IMPROVED: Save session to localStorage for reliable restoration
+    localStorage.setItem('ideatrack_session', data.user.id);
+    
+    // Load user profile
+    await loadUserProfile(data.user);
+    showPage("projects");
+    // Background load remaining data after showing the page
+    loadBackgroundData();
+  }catch(e){
+    errEl.textContent=e.message==="Invalid login credentials"?"Wrong email or password.":e.message;
+    errEl.style.display="block";
+  }
+  btn.disabled=false; btn.innerHTML="Sign In";
+}
+
+// FIX #2: Background data loading for faster perceived performance
+async function loadBackgroundData() {
+  try {
+    // Pre-load frequently used data in background after initial page load
+    if (PROJECTS.length > 0 && !ACTIVE_PROJECT) {
+      // Silently preload data for better UX
+      console.log("Background: Preloading project data...");
+    }
+  } catch (e) {
+    console.error("Background loading error:", e);
+  }
+}
+
+async function doRegister(){
+  const fname=document.getElementById("reg-fname").value.trim();
+  const lname=document.getElementById("reg-lname").value.trim();
+  const email=document.getElementById("reg-email").value.trim();
+  const pwd=document.getElementById("reg-pwd").value;
+  const pwd2=document.getElementById("reg-pwd2").value;
+  const errEl=document.getElementById("reg-err");
+  errEl.style.display="none";
+  if(!fname||!email||!pwd){ errEl.textContent="Name, email and password are required."; errEl.style.display="block"; return; }
+  if(pwd!==pwd2){ errEl.textContent="Passwords do not match."; errEl.style.display="block"; return; }
+  if(pwd.length<6){ errEl.textContent="Password must be at least 6 characters."; errEl.style.display="block"; return; }
+  const displayName=(fname+" "+lname).trim();
+  const btn=document.querySelector("#register-panel .btn-primary");
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Creating…';
+  try{
+    const {data,error}=await sb.auth.signUp({email,password:pwd,options:{data:{display_name:displayName}}});
+    if(error) throw error;
+    if(data.user){
+      await sb.from("it_user_profiles").upsert({id:data.user.id,display_name:displayName,role:"user"},{onConflict:"id"});
+      
+      // IMPROVED: Save session to localStorage
+      localStorage.setItem('ideatrack_session', data.user.id);
+      
+      await loadUserProfile(data.user);
+      showPage("projects");
+    } else {
+      errEl.style.cssText="display:block;background:rgba(62,207,178,.1);border-color:rgba(62,207,178,.3);color:var(--teal)";
+      errEl.textContent="✅ Account created! Check your email to confirm.";
+    }
+  }catch(e){ errEl.textContent=e.message; errEl.style.display="block"; }
+  btn.disabled=false; btn.innerHTML="Create Account";
+}
+
+async function doForgot(){
+  const email=document.getElementById("forgot-email").value.trim();
+  const errEl=document.getElementById("forgot-err");
+  const okEl=document.getElementById("forgot-ok");
+  errEl.style.display="none"; okEl.style.display="none";
+  if(!email){ errEl.textContent="Enter your email."; errEl.style.display="block"; return; }
+  const btn=document.querySelector("#forgot-panel .btn-primary");
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Sending…';
+  try{
+    // Use current page URL so the reset link opens this very HTML file
+    const redirectTo = window.location.href.split("#")[0];
+    const {error}=await sb.auth.resetPasswordForEmail(email, { redirectTo });
+    if(error) throw error;
+    okEl.textContent="✅ Reset link sent! Check your inbox. Click the link in the email — it will open this page with a password reset form.";
+    okEl.style.display="block";
+  }catch(e){ errEl.textContent=e.message; errEl.style.display="block"; }
+  btn.disabled=false; btn.innerHTML="Send Reset Link";
+}
+
+async function loadUserProfile(authUser){
+  const {data}=await sb.from("it_user_profiles").select("*").eq("id",authUser.id).single();
+  const displayName=data?.display_name||authUser.user_metadata?.display_name||authUser.email.split("@")[0];
+  if(!data){
+    // New user — insert full profile including email
+    await sb.from("it_user_profiles").upsert({
+      id:authUser.id, display_name:displayName, role:"user", email:authUser.email
+    },{onConflict:"id"});
+  } else if(!data.email) {
+    // Existing user missing email — backfill it
+    await sb.from("it_user_profiles").update({email:authUser.email}).eq("id",authUser.id);
+  }
+  USER={ id:authUser.id, email:authUser.email, display_name:displayName, role:data?.role||"user", gdrive_linked:data?.gdrive_linked||false, gdrive_access_token:data?.gdrive_access_token||null };
+}
+
+async function doLogout(){
+  try {
+    // IMPROVED: Clear localStorage session
+    localStorage.removeItem('ideatrack_session');
+    
+    if(NOTE_CHANNEL){ sb.removeChannel(NOTE_CHANNEL); NOTE_CHANNEL=null; }
+    await sb.auth.signOut();
+  } catch(e){ console.warn(e); }
+  USER=null; PROJECTS=[]; NOTES=[]; ACTIVE_PROJECT=null;
+  closeModal();
+  // Force full page reload to clear all state
+  window.location.reload();
+}
+
+function showUserMenu(){
+  openModal(`
+    <div style="text-align:center;padding:8px 0 18px">
+      <div class="avatar" style="background:${avColor(USER.display_name)};width:52px;height:52px;font-size:18px;margin:0 auto 12px">${initials(USER.display_name)}</div>
+      <h3 style="font-family:'Syne',sans-serif;font-size:17px;margin-bottom:4px">${escHtml(USER.display_name)}</h3>
+      <div style="font-size:13px;color:var(--muted)">${escHtml(USER.email)}</div>
+      <div style="margin-top:8px"><span class="badge ${USER.role==="admin"?"badge-gold":"badge-blue"}">${USER.role}</span></div>
+    </div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:18px 0"/>
+    <div id="menu-drive-section"></div>
+    ${USER.role==="admin"?`<button class="btn btn-surface btn-block" style="margin-bottom:10px" onclick="closeModal();setTimeout(()=>showPage('admin'),50)">⚙️ Admin Dashboard</button>`:""}
+    <button class="btn btn-danger btn-block" onclick="doLogout()">Sign Out</button>
+  `,"modal-sm");
+  renderMenuDriveSection();
+}
+
+function renderMenuDriveSection(){
+  const el=document.getElementById("menu-drive-section"); if(!el) return;
+  el.innerHTML = USER.gdrive_linked && USER.gdrive_access_token
+    ? `<div class="gdrive-strip gdrive-connected" style="margin-bottom:14px"><span>☁️</span><div style="flex:1"><div style="font-size:13px;font-weight:600;color:var(--teal)">Google Drive Connected</div><div style="font-size:12px;color:var(--muted);margin-top:2px">Files saved to your Drive</div></div><button class="btn btn-ghost" style="font-size:11px;padding:5px 10px;color:var(--red)" onclick="disconnectDrive()">Disconnect</button></div>`
+    : `<button class="btn btn-gdrive btn-block" style="margin-bottom:14px" onclick="startDriveConnect()"><span style="font-weight:900">G</span> Connect Google Drive</button>`;
+}
+
+/* ════════════════════════════════════
+   ADMIN DASHBOARD
+════════════════════════════════════ */
+const ADM_CFG_KEY="ideatrack_adm_cfg";
+function loadAdminCfg(){ try{ return JSON.parse(localStorage.getItem(ADM_CFG_KEY)||"{}"); }catch(e){ return {}; } }
+function saveAdminCfg(obj){ localStorage.setItem(ADM_CFG_KEY, JSON.stringify({...loadAdminCfg(),...obj})); }
+
+function switchAdminTab(tab, el){
+  document.querySelectorAll(".admin-tab").forEach(t=>t.classList.remove("active"));
+  document.querySelectorAll(".admin-tab-panel").forEach(t=>t.classList.remove("active"));
+  el.classList.add("active");
+  document.getElementById("adm-tab-"+tab).classList.add("active");
+  if(tab==="settings") initAdminSettings();
+}
+
+function initAdminSettings(){
+  const cfg=loadAdminCfg();
+  const fe=document.getElementById("adm-gdrive-folder"); if(fe) fe.value=cfg.gdriveFolder||GDRIVE_FOLDER;
+  const ge=document.getElementById("adm-gcid"); if(ge) ge.value=cfg.gcId||CFG.gcId||"";
+  renderRoleList();
+}
+
+// FIX #3: Google Drive settings - Admin only
+function saveAdminDriveSettings(){
+  if(USER?.role!=="admin"){ toast("⛔ Admin access required"); return; }
+  const folder=document.getElementById("adm-gdrive-folder").value.trim();
+  const gcId=document.getElementById("adm-gcid").value.trim();
+  const errEl=document.getElementById("adm-drive-err");
+  const okEl=document.getElementById("adm-drive-ok");
+  errEl.style.display="none"; okEl.style.display="none";
+  if(!folder){ errEl.textContent="Enter Drive folder link."; errEl.style.display="block"; return; }
+  saveAdminCfg({gdriveFolder:folder,gcId}); CFG.gcId=gcId;
+  okEl.textContent="✅ Drive settings saved!"; okEl.style.display="block";
+  toast("✅ Drive settings saved");
+}
+
+function renderRoleList(){
+  if(USER?.role!=="admin"){ toast("⛔ Admin access required"); return; }
+  const el=document.getElementById("adm-role-list"); if(!el) return;
+  const users=_adminData.users||[];
+  if(!users.length){ el.innerHTML=`<p style="color:var(--muted);font-size:13px">No users. Load dashboard first.</p>`; return; }
+  el.innerHTML=users.map(u=>`
+    <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--border)">
+      <div class="avatar" style="background:${avColor(u.display_name)};color:#0e0f11;font-size:11px">${initials(u.display_name)}</div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:500;color:var(--text)">${escHtml(u.display_name||"—")}</div><div style="font-size:11px;color:var(--muted)">${escHtml(u.email||"")}</div></div>
+      <span class="badge ${u.role==="admin"?"badge-gold":"badge-blue"}" style="font-size:10px">${u.role||"user"}</span>
+      ${u.id!==USER.id?`<button class="btn ${u.role==="admin"?"btn-danger":"btn-teal"}" style="font-size:11px;padding:5px 12px" onclick="toggleUserRole('${u.id}','${u.role||"user"}')">${u.role==="admin"?"→ user":"→ admin"}</button>`:`<span style="font-size:11px;color:var(--muted)">(you)</span>`}
+    </div>`).join("");
+}
+
+// FIX #3: Role management - Admin only
+async function toggleUserRole(userId, currentRole){
+  if(USER?.role!=="admin"){ toast("⛔ Admin access required"); return; }
+  const newRole=currentRole==="admin"?"user":"admin";
+  const {data, error}=await sb.from("it_user_profiles").update({role:newRole}).eq("id",userId).select();
+  if(error){ 
+    console.error("Role update error:", error);
+    toast("❌ Failed to update role: " + error.message); 
+    return; 
+  }
+  _adminData.users=_adminData.users.map(u=>u.id===userId?{...u,role:newRole}:u);
+  renderRoleList(); 
+  toast(`✅ Role updated to ${newRole}`);
+}
+
+// FIX #3: Admin access control for dangerous operations
+async function confirmDeleteAllNotes(){ 
+  if(USER?.role!=="admin"){ toast("⛔ Admin access required"); return; }
+  if(!confirm("⚠️ Delete ALL notes from ALL projects? This cannot be undone!")) return; 
+  const {error} = await sb.from("it_notes").delete().neq("id","__none__"); 
+  if(error){ console.error("Delete all notes error:", error); toast("❌ Error: " + error.message); return; }
+  toast("🗑 All notes deleted"); 
+  loadAdminDashboard(); 
+}
+
+async function confirmDeleteAllProjects(){ 
+  if(USER?.role!=="admin"){ toast("⛔ Admin access required"); return; }
+  if(!confirm("⚠️ Delete ALL projects and their notes? This cannot be undone!")) return; 
+  const {error} = await sb.from("it_projects").delete().neq("id","__none__"); 
+  if(error){ console.error("Delete all projects error:", error); toast("❌ Error: " + error.message); return; }
+  toast("🗑 All projects deleted"); 
+  loadAdminDashboard(); 
+}
+
+async function loadAdminDashboard(){
+  if(USER?.role!=="admin"){ toast("⛔ Admin access required"); showPage("projects"); return; }
+  document.getElementById("adm-refresh-ts").textContent="Loading…";
+  try{
+    const [uR,pR,nR,sR,aR]=await Promise.all([
+      sb.from("it_user_profiles").select("*").order("created_at",{ascending:false}),
+      sb.from("it_projects").select("*").order("created_date",{ascending:false}),
+      sb.from("it_notes").select("*").order("created_at",{ascending:false}),
+      sb.from("it_project_shares").select("*"),
+      sb.from("it_activity_log").select("*").order("created_at",{ascending:false}).limit(200),
+    ]);
+    const users=uR.data||[], projects=pR.data||[], notes=nR.data||[], shares=sR.data||[], activity=aR.data||[];
+    _adminData={users,projects,notes,shares,activity};
+
+    document.getElementById("adm-s-users").textContent=users.length;
+    document.getElementById("adm-s-projects").textContent=projects.length;
+    document.getElementById("adm-s-notes").textContent=notes.length;
+    document.getElementById("adm-s-drive").textContent=users.filter(u=>u.gdrive_linked).length;
+    document.getElementById("adm-s-pinned").textContent=notes.filter(n=>n.pinned).length;
+    document.getElementById("adm-s-audio").textContent=notes.filter(n=>n.audio_url).length;
+    document.getElementById("adm-s-shares").textContent=new Set(shares.map(s=>s.project_id)).size;
+    document.getElementById("adm-s-activity").textContent=activity.length;
+
+    const notesPerUser={}, notesPerProject={}, projPerUser={};
+    notes.forEach(n=>{ notesPerUser[n.user_id]=(notesPerUser[n.user_id]||0)+1; notesPerProject[n.project_id]=(notesPerProject[n.project_id]||0)+1; });
+    projects.forEach(p=>{ projPerUser[p.created_by]=(projPerUser[p.created_by]||0)+1; });
+    const sharesPerProject={};
+    shares.forEach(s=>{ sharesPerProject[s.project_id]=(sharesPerProject[s.project_id]||0)+1; });
+
+    // users table
+    document.getElementById("adm-users-body").innerHTML=users.length
+      ? users.map(u=>`<tr>
+          <td><div style="display:flex;align-items:center;gap:9px"><div class="avatar" style="background:${avColor(u.display_name)};color:#0e0f11;font-size:11px">${initials(u.display_name)}</div><span style="color:var(--text);font-weight:500">${escHtml(u.display_name||"—")}</span></div></td>
+          <td>${escHtml(u.email||"—")}</td>
+          <td><span class="badge ${u.role==="admin"?"badge-gold":"badge-blue"}" style="font-size:10px">${u.role||"user"}</span></td>
+          <td>${u.gdrive_linked?'<span class="badge badge-teal" style="font-size:10px">☁️</span>':'<span style="color:var(--muted)">—</span>'}</td>
+          <td>${projPerUser[u.id]||0}</td><td>${notesPerUser[u.id]||0}</td>
+          <td>${u.created_at?fmtDate(u.created_at):"—"}</td>
+        </tr>`).join("")
+      : `<tr><td colspan="7" style="text-align:center;padding:24px;color:var(--muted)">No users yet</td></tr>`;
+
+    // projects table
+    document.getElementById("adm-projects-body").innerHTML=projects.length
+      ? projects.map(p=>{ const owner=users.find(u=>u.id===p.created_by); return `<tr>
+          <td style="color:var(--text);font-weight:500">${escHtml(p.name)}</td>
+          <td>${owner?`<div style="display:flex;align-items:center;gap:8px"><div class="avatar" style="background:${avColor(owner.display_name)};color:#0e0f11;font-size:10px;width:24px;height:24px">${initials(owner.display_name)}</div><span>${escHtml(owner.display_name||"")}</span></div>`:"—"}</td>
+          <td>${sharesPerProject[p.id]?`<span class="badge badge-purple" style="font-size:10px">👥 ${sharesPerProject[p.id]} user${sharesPerProject[p.id]>1?"s":""}</span>`:"<span style='color:var(--muted)'>—</span>"}</td>
+          <td>${notesPerProject[p.id]||0}</td><td>${fmtDate(p.created_date)}</td>
+        </tr>`;}).join("")
+      : `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--muted)">No projects yet</td></tr>`;
+
+    // notes table
+    const projMap={}; projects.forEach(p=>projMap[p.id]=p.name);
+    document.getElementById("adm-notes-body").innerHTML=notes.slice(0,30).length
+      ? notes.slice(0,30).map(n=>{
+          const preview=(n.note_text||"").slice(0,60)+((n.note_text||"").length>60?"…":"");
+          const tagsHtml=(n.tags||[]).map(t=>{const c=TAG_COLORS[t]||{};return `<span style="background:${c.bg};color:${c.color};border-radius:4px;padding:2px 6px;font-size:10px;font-weight:600">${t}</span>`;}).join(" ");
+          return `<tr>
+            <td><div style="display:flex;align-items:center;gap:7px"><div class="avatar" style="background:${avColor(n.user_name)};color:#0e0f11;font-size:10px;width:24px;height:24px">${initials(n.user_name)}</div><span style="font-size:12px">${escHtml(n.user_name||"—")}</span></div></td>
+            <td style="font-size:12px">${escHtml(projMap[n.project_id]||"—")}</td>
+            <td style="font-size:12px;color:var(--text);max-width:200px">${escHtml(preview)||"—"}</td>
+            <td>${tagsHtml||"—"}</td><td>${[n.audio_url?"🎤":"",n.drawing_url?"✍️":""].filter(Boolean).join(" ")||"—"}</td>
+            <td style="font-size:11px;white-space:nowrap">${fmtDate(n.created_at)}</td>
+          </tr>`;}).join("")
+      : `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--muted)">No notes yet</td></tr>`;
+
+    // tag analytics
+    const tagCounts={}; TAG_LIST.forEach(t=>tagCounts[t]=0);
+    notes.forEach(n=>(n.tags||[]).forEach(t=>{ if(tagCounts[t]!==undefined) tagCounts[t]++; }));
+    const total=Object.values(tagCounts).reduce((a,b)=>a+b,0)||1;
+    const tagColors=["#d4a843","#3ecfb2","#e05555","#4a90e2"];
+    const tEl=document.getElementById("adm-tag-chart");
+    if(Object.values(tagCounts).every(v=>v===0)){ tEl.innerHTML=`<p style="color:var(--muted);font-size:13px">No tagged notes yet.</p>`; }
+    else {
+      const size=140,cx=70,cy=70,r=50,sw=22,circ=2*Math.PI*r; let off=0;
+      const slices=TAG_LIST.map((t,i)=>{ const pct=tagCounts[t]/total; const dash=`${pct*circ} ${circ}`; const rotate=`rotate(${off*360-90} ${cx} ${cy})`; off+=pct; return `<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${tagColors[i]}" stroke-width="${sw}" stroke-dasharray="${dash}" transform="${rotate}" opacity="${tagCounts[t]>0?1:0}"/>`; }).join("");
+      tEl.innerHTML=`<div class="donut-wrap"><svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">${slices}</svg><div class="donut-legend">${TAG_LIST.map((t,i)=>`<div class="donut-legend-item"><div class="donut-legend-dot" style="background:${tagColors[i]}"></div><span>${t}</span><span style="margin-left:auto;color:var(--text);font-weight:600">${tagCounts[t]}</span></div>`).join("")}</div></div>`;
+    }
+    const sortedProjs=projects.map(p=>({name:p.name,count:notesPerProject[p.id]||0})).sort((a,b)=>b.count-a.count).slice(0,10);
+    const maxC=sortedProjs[0]?.count||1;
+    document.getElementById("adm-proj-bars").innerHTML=sortedProjs.length?sortedProjs.map(p=>`<div style="margin-bottom:12px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:5px"><span style="color:var(--text);font-weight:500">${escHtml(p.name)}</span><span style="color:var(--muted)">${p.count} note${p.count!==1?"s":""}</span></div><div class="progress"><div class="progress-fill" style="width:${Math.round(p.count/maxC*100)}%"></div></div></div>`).join(""):`<p style="color:var(--muted);font-size:13px">No projects yet.</p>`;
+
+    document.getElementById("adm-refresh-ts").textContent="Updated "+new Date().toLocaleTimeString("en-IN",{hour:"2-digit",minute:"2-digit"});
+  }catch(e){ toast("❌ "+e.message); document.getElementById("adm-refresh-ts").textContent="Error"; }
+}
+
+/* ════════════════════════════════════
+   GOOGLE DRIVE
+════════════════════════════════════ */
+function loadGoogleScripts(){ return new Promise(resolve=>{ if(window._gLoaded){resolve();return;} let done=0; const finish=()=>{if(++done===2){window._gLoaded=true;resolve();}}; const s1=document.createElement("script");s1.src="https://apis.google.com/js/api.js";s1.onload=()=>window.gapi.load("client",finish);document.head.appendChild(s1); const s2=document.createElement("script");s2.src="https://accounts.google.com/gsi/client";s2.onload=finish;document.head.appendChild(s2); }); }
+
+function startDriveConnect(){
+  if(!CFG.gcId){ toast("⚠️ Google Client ID not configured. Ask admin to set it."); return; }
+  openModal(`<div style="text-align:center;padding:10px 0 6px"><div style="font-size:44px;margin-bottom:12px">☁️</div><h3 style="font-family:'Syne',sans-serif;font-size:18px;margin-bottom:10px">Connect Google Drive</h3><p style="font-size:13px;color:var(--muted);line-height:1.7;margin-bottom:18px">Save voice recordings and drawings to your Drive.</p><div id="gdrive-connect-err" style="display:none;background:rgba(224,85,85,.1);border:1px solid rgba(224,85,85,.3);border-radius:8px;padding:10px;font-size:12px;color:var(--red);margin-bottom:14px"></div><button class="btn btn-gdrive btn-lg btn-block" onclick="doConnectDrive()" id="gdrive-connect-btn"><span style="font-weight:900;font-size:16px">G</span> Connect Google Drive</button><button class="btn btn-ghost btn-block" style="margin-top:10px" onclick="closeModal()">Skip for now</button></div>`,"modal-sm");
+}
+
+async function doConnectDrive(){
+  const btn=document.getElementById("gdrive-connect-btn"), errEl=document.getElementById("gdrive-connect-err");
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Connecting…';
+  try{
+    await loadGoogleScripts();
+    const token=await new Promise((res,rej)=>{ const client=window.google.accounts.oauth2.initTokenClient({client_id:CFG.gcId,scope:"https://www.googleapis.com/auth/drive.file",callback:r=>{ if(r.error)rej(new Error(r.error)); else res(r.access_token); }}); client.requestAccessToken(); });
+    await sb.from("it_user_profiles").update({gdrive_linked:true,gdrive_access_token:token,gdrive_token_expiry:Date.now()+3500000}).eq("id",USER.id);
+    USER.gdrive_linked=true; USER.gdrive_access_token=token;
+    updateDriveUI(); closeModal(); toast("☁️ Google Drive connected!");
+  }catch(e){ if(errEl){errEl.textContent="Connection failed: "+e.message;errEl.style.display="block";} btn.disabled=false; btn.innerHTML='<span style="font-weight:900;font-size:16px">G</span> Try Again'; }
+}
+
+async function disconnectDrive(){
+  await sb.from("it_user_profiles").update({gdrive_linked:false,gdrive_access_token:null}).eq("id",USER.id);
+  USER.gdrive_linked=false; USER.gdrive_access_token=null;
+  updateDriveUI(); closeModal(); toast("Google Drive disconnected");
+}
+
+async function uploadToGDrive(dataUrl, filename, mimeType){
+  const token=USER.gdrive_access_token; if(!token) throw new Error("Not connected");
+  const res=await fetch(dataUrl); const blob=await res.blob();
+  const cfg=loadAdminCfg(); const folderId=cfg.gdriveFolder?.match(/folders\/([a-zA-Z0-9_-]+)/)?.[1]||"1cnYL6VVNNyH4iI2ZCOQU3ahtH0abIxza";
+  const meta=JSON.stringify({name:filename,mimeType,parents:[folderId]});
+  const form=new FormData(); form.append("metadata",new Blob([meta],{type:"application/json"})); form.append("file",blob);
+  const up=await fetch("https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,webViewLink",{method:"POST",headers:{Authorization:`Bearer ${token}`},body:form});
+  if(!up.ok) throw new Error("Upload failed: "+up.status);
+  const file=await up.json();
+  await fetch(`https://www.googleapis.com/drive/v3/files/${file.id}/permissions`,{method:"POST",headers:{Authorization:`Bearer ${token}`,"Content-Type":"application/json"},body:JSON.stringify({role:"reader",type:"anyone"})});
+  return file.webViewLink;
+}
+
+function updateDriveUI(){
+  const linked=USER?.gdrive_linked&&USER?.gdrive_access_token;
+  document.getElementById("proj-gdrive-badge").style.display=linked?"inline-flex":"none";
+  document.getElementById("notes-gdrive-badge").style.display=linked?"inline-flex":"none";
+  const strip=document.getElementById("proj-drive-strip"); if(!strip) return;
+  const label=document.getElementById("proj-drive-label"), sub=document.getElementById("proj-drive-sub"), btn=document.getElementById("proj-drive-btn");
+  strip.style.display="flex";
+  if(linked){
+    strip.className="gdrive-strip gdrive-connected"; label.textContent="Google Drive Connected"; sub.textContent="Files saved to your Drive";
+    btn.className="btn btn-ghost"; btn.style.cssText="font-size:11px;padding:5px 10px;color:var(--red)"; btn.textContent="Disconnect"; btn.onclick=disconnectDrive;
+  } else {
+    strip.className="gdrive-strip"; label.innerHTML="<strong style='color:var(--text)'>Connect Google Drive</strong> for file storage"; sub.textContent="Voice recordings & drawings saved to your Drive";
+    btn.className="btn btn-gdrive"; btn.style.cssText="font-size:12px;padding:7px 14px"; btn.textContent="Connect"; btn.onclick=startDriveConnect;
+  }
+}
+
+/* ════════════════════════════════════
+   PROJECTS PAGE
+════════════════════════════════════ */
+async function initProjectsPage(){
+  const av=document.getElementById("proj-avatar");
+  av.textContent=initials(USER.display_name); av.style.background=avColor(USER.display_name);
+  document.getElementById("proj-uname").textContent=USER.display_name;
+  updateDriveUI(); await loadProjects();
+}
+
+async function loadProjects(){
+  document.getElementById("proj-list").innerHTML=`<div class="empty"><span class="spinner"></span></div>`;
+  // Load own projects + shared projects
+  const [ownRes, shareRes] = await Promise.all([
+    sb.from("it_projects").select("*").order("created_date",{ascending:false}),
+    sb.from("it_project_shares").select("project_id, role").eq("shared_with_id", USER.id)
+  ]);
+  const ownProjs = ownRes.data||[];
+  const sharedIds = (shareRes.data||[]).map(s=>s.project_id);
+  let sharedProjs = [];
+  if(sharedIds.length){
+    const {data}=await sb.from("it_projects").select("*").in("id", sharedIds);
+    sharedProjs=(data||[]).map(p=>({...p, _isShared:true, _shareRole:(shareRes.data||[]).find(s=>s.project_id===p.id)?.role||"viewer"}));
+  }
+  PROJECTS=[...ownProjs.map(p=>({...p,_isOwner:true})), ...sharedProjs.filter(s=>!ownProjs.find(o=>o.id===s.id))];
+  renderProjects();
+}
+
+function renderProjects(){
+  const q=(document.getElementById("proj-search")||{}).value?.toLowerCase()||"";
+  const filtered=PROJECTS.filter(p=>p.name.toLowerCase().includes(q));
+  const el=document.getElementById("proj-list");
+  if(!filtered.length){ el.innerHTML=`<div class="empty"><span class="icon">📂</span><h3>No projects yet</h3><p style="font-size:13px">Create your first project!</p></div>`; return; }
+  el.innerHTML=filtered.map(p=>`
+    <div class="proj-item" onclick="openProject('${p.id}')">
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
+          <span style="font-family:'Syne',sans-serif;font-size:15px;font-weight:700">${escHtml(p.name)}</span>
+          ${p._isShared?`<span class="badge badge-purple" style="font-size:10px">👥 ${p._shareRole}</span>`:""}
+        </div>
+        <div style="font-size:12px;color:var(--muted)">📅 ${new Date(p.created_date).toLocaleDateString("en-IN",{day:"numeric",month:"short",year:"numeric"})} · by ${escHtml(p.created_by_name||"Unknown")}</div>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        ${p._isOwner!==false?`<button class="btn btn-purple" style="font-size:11px;padding:5px 9px" onclick="event.stopPropagation();showShareModal('${p.id}')">👥</button><button class="btn btn-danger" style="font-size:11px;padding:5px 9px" onclick="event.stopPropagation();deleteProject('${p.id}','${escHtml(p.name)}')">🗑</button>`:""}
+      </div>
+    </div>`).join("");
+}
+
+function showCreateProj(){
+  openModal(`<h3 style="font-family:'Syne',sans-serif;margin-bottom:20px">New Project</h3>
+    <div class="field"><label>Project Name *</label><input id="new-proj-name" class="input" placeholder="e.g. Marketing Campaign Q3" style="font-size:18px;font-family:'Syne',sans-serif;font-weight:600" onkeydown="if(event.key==='Enter')createProject()"/></div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:20px">📅 Created date is set automatically</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary btn-lg" onclick="createProject()">Create Project</button></div>`);
+  setTimeout(()=>document.getElementById("new-proj-name")?.focus(),80);
+}
+
+async function createProject(){
+  const name=(document.getElementById("new-proj-name")||{}).value?.trim();
+  if(!name){toast("Enter a project name");return;}
+  
+  // FIX #2: Ensure USER is loaded and created_by is correctly passed
+  if(!USER || !USER.id){
+    console.error("USER not loaded:", USER);
+    toast("❌ Error: User session not ready. Please refresh and try again.");
+    return;
+  }
+  
+  const p={
+    id:uid(),
+    name:name,
+    description:null,
+    emoji:"💡",
+    created_by:USER.id,  // FIX #2: Explicit user ID
+    created_by_name:USER.display_name,
+    created_date:new Date().toISOString()
+  };
+  
+  // FIX #7: Proper error handling with detailed logging
+  console.log("Creating project:", p);
+  const {data, error}=await sb.from("it_projects").insert(p).select();
+  
+  if(error){
+    console.error("Project creation error:", error);
+    toast("❌ Failed to create project: " + error.message);
+    // Show more helpful error for RLS issues
+    if(error.message.includes("row-level security")){
+      toast("❌ Security policy error. Please check database RLS policies.");
+    }
+    return;
+  }
+  
+  console.log("Project created successfully:", data);
+  PROJECTS.unshift({...p,_isOwner:true}); 
+  renderProjects(); 
+  closeModal();
+  toast("✅ Project created!");
+}
+
+async function deleteProject(id,name){
+  if(!confirm(`Delete project "${name}" and all its notes?`)) return;
+  await sb.from("it_projects").delete().eq("id",id);
+  PROJECTS=PROJECTS.filter(p=>p.id!==id); renderProjects();
+  toast("🗑 Project deleted");
+}
+
+function openProject(id){
+  ACTIVE_PROJECT=PROJECTS.find(p=>p.id===id); if(!ACTIVE_PROJECT) return;
+  document.getElementById("notes-title").textContent=ACTIVE_PROJECT.name;
+  ACTIVE_TAG=null;
+  showPage("notes");
+}
+
+function goBack(){ if(NOTE_CHANNEL){sb.removeChannel(NOTE_CHANNEL);NOTE_CHANNEL=null;} showPage("projects"); }
+
+/* ════════════════════════════════════
+   PROJECT SHARING
+   FIX #3: EMAIL SHARING FEATURE ADDED
+════════════════════════════════════ */
+async function showShareModal(projId){
+  const id = projId || ACTIVE_PROJECT?.id; if(!id) return;
+  const proj = PROJECTS.find(p=>p.id===id); if(!proj) return;
+  openModal(`<h3 style="font-family:'Syne',sans-serif;margin-bottom:6px">👥 Share Project</h3>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:18px">"${escHtml(proj.name)}"</p>
+    
+    <!-- FIX #3: NEW EMAIL SHARING TAB -->
+    <div style="display:flex;gap:8px;margin-bottom:16px;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:4px">
+      <button class="btn btn-surface" id="share-tab-internal" style="flex:1;font-size:12px;padding:8px;background:var(--gold);color:#0e0f11;border:none" onclick="switchShareTab('internal')">👤 Internal Users</button>
+      <button class="btn btn-surface" id="share-tab-email" style="flex:1;font-size:12px;padding:8px" onclick="switchShareTab('email')">📧 Email Invite</button>
+    </div>
+    
+    <!-- Internal User Sharing -->
+    <div id="share-panel-internal">
+      <div class="field">
+        <label>Add User by Email</label>
+        <div style="display:flex;gap:8px">
+          <input id="share-email" class="input" type="email" placeholder="colleague@company.com" style="flex:1"/>
+          <select id="share-role" class="input" style="width:110px">
+            <option value="editor">Editor</option>
+            <option value="viewer">Viewer</option>
+          </select>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:6px"><strong>Editor</strong> — can add/edit notes · <strong>Viewer</strong> — read-only</div>
+      </div>
+      <div id="share-err" class="err-box"></div>
+      <div id="share-ok" style="display:none;background:rgba(62,207,178,.1);border:1px solid rgba(62,207,178,.3);border-radius:8px;padding:10px;font-size:13px;color:var(--teal);margin-bottom:12px"></div>
+      <button class="btn btn-primary btn-block" style="margin-bottom:18px" onclick="addShare('${id}')">➕ Share with User</button>
+      <hr style="border:none;border-top:1px solid var(--border);margin-bottom:14px"/>
+      <div style="font-size:12px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px">Current Access</div>
+      <div id="share-list"><span class="spinner"></span></div>
+    </div>
+    
+    <!-- FIX #3: NEW EMAIL INVITATION PANEL -->
+    <div id="share-panel-email" style="display:none">
+      <div class="field">
+        <label>Recipient Emails</label>
+        <textarea id="email-share-recipients" class="input" placeholder="friend1@email.com, friend2@email.com&#10;Enter multiple emails separated by commas" rows="3"></textarea>
+        <p style="font-size:11px;color:var(--muted);margin-top:6px">Separate multiple emails with commas</p>
+      </div>
+      <div class="field">
+        <label>Personal Message (Optional)</label>
+        <textarea id="email-share-message" class="input" placeholder="Hey! I'd love to share this project with you. Let me know what you think!" rows="3"></textarea>
+      </div>
+      <div style="background:var(--card2);border:1px solid var(--border2);border-radius:8px;padding:14px;margin-bottom:16px">
+        <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:10px;text-transform:uppercase;letter-spacing:.05em">📧 Email Preview</div>
+        <div id="email-preview-content" style="font-size:13px;color:var(--soft);line-height:1.7"></div>
+      </div>
+      <button class="btn btn-primary btn-block" onclick="sendEmailShare('${id}','${escHtml(proj.name)}')">📤 Send Email Invitations</button>
+    </div>
+  `,"modal-lg");
+  loadShareList(id);
+  updateEmailPreview(proj.name);
+  
+  // Update preview on input
+  document.getElementById("email-share-recipients")?.addEventListener("input", () => updateEmailPreview(proj.name));
+  document.getElementById("email-share-message")?.addEventListener("input", () => updateEmailPreview(proj.name));
+}
+
+// FIX #3: Switch between internal and email sharing tabs
+function switchShareTab(tab) {
+  const internalBtn = document.getElementById("share-tab-internal");
+  const emailBtn = document.getElementById("share-tab-email");
+  const internalPanel = document.getElementById("share-panel-internal");
+  const emailPanel = document.getElementById("share-panel-email");
+  
+  if (tab === "internal") {
+    internalBtn.style.cssText = "flex:1;font-size:12px;padding:8px;background:var(--gold);color:#0e0f11;border:none";
+    emailBtn.style.cssText = "flex:1;font-size:12px;padding:8px";
+    internalPanel.style.display = "block";
+    emailPanel.style.display = "none";
+  } else {
+    internalBtn.style.cssText = "flex:1;font-size:12px;padding:8px";
+    emailBtn.style.cssText = "flex:1;font-size:12px;padding:8px;background:var(--gold);color:#0e0f11;border:none";
+    internalPanel.style.display = "none";
+    emailPanel.style.display = "block";
+  }
+}
+
+// FIX #3: Update email preview
+function updateEmailPreview(projName) {
+  const recipients = (document.getElementById("email-share-recipients")?.value || "").trim();
+  const message = (document.getElementById("email-share-message")?.value || "").trim();
+  const emailCount = recipients.split(",").filter(e => e.trim()).length;
+  
+  const previewEl = document.getElementById("email-preview-content");
+  if (!previewEl) return;
+  
+  const appUrl = window.location.href.split("#")[0];
+  
+  previewEl.innerHTML = `
+    <strong>From:</strong> ${escHtml(USER.email)}<br>
+    <strong>To:</strong> ${emailCount > 0 ? `${emailCount} recipient${emailCount > 1 ? "s" : ""}` : "No recipients"}<br>
+    <strong>Subject:</strong> ${escHtml(USER.display_name)} invited you to collaborate on "${escHtml(projName)}"<br><br>
+    <div style="padding-left:12px;border-left:2px solid var(--border2)">
+      Hi there!<br><br>
+      ${message ? escHtml(message) + "<br><br>" : "<em style='color:var(--muted)'>[Your personal message will appear here]</em><br><br>"}
+      I'm working on a project called "<strong>${escHtml(projName)}</strong>" and I'd love for you to check it out.<br><br>
+      <strong>Project Invitation Link:</strong><br>
+      <span style="color:var(--gold)">${appUrl}</span><br><br>
+      <strong>To get started:</strong><br>
+      1. Click the link above (or copy to your browser)<br>
+      2. Sign up for IdeaTrack (it's free!)<br>
+      3. Once registered with your email, I'll share the project with you<br><br>
+      Looking forward to collaborating!<br><br>
+      Best regards,<br>
+      ${escHtml(USER.display_name)}
+    </div>
+  `;
+}
+
+// FIX #3: Send email invitations
+async function sendEmailShare(projId, projName) {
+  const recipients = (document.getElementById("email-share-recipients")?.value || "").trim();
+  const message = (document.getElementById("email-share-message")?.value || "").trim();
+  
+  if (!recipients) {
+    toast("❌ Please enter at least one email address");
+    return;
+  }
+  
+  const emails = recipients.split(",").map(e => e.trim()).filter(e => e && e.includes("@"));
+  
+  if (emails.length === 0) {
+    toast("❌ No valid email addresses found");
+    return;
+  }
+  
+  // Generate app link
+  const appUrl = window.location.href.split("#")[0];
+  
+  // Create standardized email content
+  const emailSubject = encodeURIComponent(`${USER.display_name} invited you to collaborate on "${projName}"`);
+  const emailBody = encodeURIComponent(`Hi there!
+
+${message}
+
+I'm working on a project called "${projName}" and I'd love for you to check it out.
+
+Project Invitation Link:
+${appUrl}
+
+To get started:
+1. Click the link above (or copy it to your browser)
+2. Sign up for IdeaTrack (it's free!)
+3. Once you're registered with your email address, I'll share the project with you
+
+Looking forward to collaborating!
+
+Best regards,
+${USER.display_name}
+${USER.email}`);
+  
+  try {
+    // Track email shares in database
+    for (const email of emails) {
+      await sb.from("it_project_shares").insert({
+        id: uid(),
+        project_id: projId,
+        shared_by_id: USER.id,
+        shared_by_name: USER.display_name,
+        shared_with_email: email,
+        shared_with_name: email,
+        role: "viewer",
+        created_at: new Date().toISOString()
+      });
+    }
+    
+    // Log activity
+    await logActivity(projId, "shared", `${USER.display_name} sent email invitations to ${emails.length} people`);
+    
+    // Open email client with mailto link
+    const mailtoLink = `mailto:${emails.join(",")}?subject=${emailSubject}&body=${emailBody}`;
+    window.location.href = mailtoLink;
+    
+    closeModal();
+    toast(`✅ Email draft created for ${emails.length} recipient${emails.length > 1 ? "s" : ""}!`);
+    
+  } catch (e) {
+    console.error("Email share error:", e);
+    toast("❌ Error creating email share: " + e.message);
+  }
+}
+
+async function loadShareList(projId){
+  const {data}=await sb.from("it_project_shares").select("*").eq("project_id",projId);
+  const el=document.getElementById("share-list"); if(!el) return;
+  const shares=data||[];
+  if(!shares.length){ el.innerHTML=`<p style="font-size:13px;color:var(--muted)">No users shared yet. Only you have access.</p>`; return; }
+  el.innerHTML=shares.map(s=>`
+    <div class="share-chip" style="display:flex;justify-content:space-between;width:100%;margin-bottom:8px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="avatar" style="background:${avColor(s.shared_with_name||s.shared_with_email)};color:#0e0f11;font-size:10px;width:28px;height:28px">${initials(s.shared_with_name||s.shared_with_email)}</div>
+        <div><div style="font-size:13px;color:var(--text)">${escHtml(s.shared_with_name||s.shared_with_email)}</div><div style="font-size:11px;color:var(--muted)">${escHtml(s.shared_with_email)}</div></div>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="badge ${s.role==="editor"?"badge-teal":"badge-blue"}" style="font-size:10px">${s.role}</span>
+        <button class="btn btn-danger" style="font-size:11px;padding:4px 8px" onclick="removeShare('${s.id}','${projId}')">✕</button>
+      </div>
+    </div>`).join("");
+}
+
+async function addShare(projId){
+  const email=document.getElementById("share-email")?.value?.trim().toLowerCase();
+  const role=document.getElementById("share-role")?.value||"viewer";
+  const errEl=document.getElementById("share-err");
+  const okEl=document.getElementById("share-ok");
+  const btn=document.querySelector(`[onclick="addShare('${projId}')"]`);
+  errEl.style.display="none"; okEl.style.display="none";
+  if(!email){ errEl.textContent="Enter an email address."; errEl.style.display="block"; return; }
+  if(email===USER.email.toLowerCase()){ errEl.textContent="You already own this project."; errEl.style.display="block"; return; }
+
+  // Show loading
+  if(btn){ btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Searching…'; }
+
+  try {
+    // Look up user by email — try both email column and auth match via profile
+    let targetUser = null;
+
+    // Try email column first
+    const {data:byEmail} = await sb.from("it_user_profiles").select("id,display_name,email").ilike("email", email);
+    if(byEmail && byEmail.length > 0) targetUser = byEmail[0];
+
+    // If not found, try matching display_name as fallback (some profiles may not have email filled)
+    if(!targetUser){
+      // Try to find via auth admin lookup - not available client side
+      // Show invite message with app link
+      const appUrl = window.location.href.split("#")[0];
+      okEl.style.cssText="display:block;background:rgba(212,168,67,.1);border:1px solid rgba(212,168,67,.3);border-radius:8px;padding:14px;font-size:13px;color:var(--gold);margin-bottom:12px";
+      okEl.innerHTML=`⚠️ <strong>${escHtml(email)}</strong> is not registered yet.<br><br>
+        <span style="color:var(--soft);font-size:12px">Share this link with them to register and get access:</span><br><br>
+        <div style="background:var(--card);border:1px solid var(--border2);border-radius:8px;padding:10px;display:flex;align-items:center;gap:8px;margin-top:4px">
+          <span style="font-size:12px;color:var(--text);flex:1;word-break:break-all">${appUrl}</span>
+          <button class="btn btn-surface" style="font-size:11px;padding:5px 10px;flex-shrink:0" onclick="navigator.clipboard.writeText('${appUrl}').then(()=>toast('📋 Link copied!'))">Copy Link</button>
+        </div>
+        <div style="font-size:12px;color:var(--muted);margin-top:10px">Once they register with <strong style="color:var(--text)">${escHtml(email)}</strong>, come back here and share.</div>`;
+      return;
+    }
+
+    // Check duplicate
+    const {data:existing} = await sb.from("it_project_shares").select("id").eq("project_id",projId).eq("shared_with_id",targetUser.id);
+    if(existing && existing.length > 0){ errEl.textContent="This user already has access."; errEl.style.display="block"; return; }
+
+    // Insert share
+    const shareRow = {
+      id: uid(),
+      project_id: projId,
+      shared_by_id: USER.id,
+      shared_by_name: USER.display_name,
+      shared_with_id: targetUser.id,
+      shared_with_email: email,
+      shared_with_name: targetUser.display_name || email,
+      role,
+      created_at: new Date().toISOString()
+    };
+    const {error} = await sb.from("it_project_shares").insert(shareRow);
+    if(error){ errEl.textContent="❌ "+error.message; errEl.style.display="block"; return; }
+
+    await logActivity(projId,"shared",`${USER.display_name} shared project with ${targetUser.display_name||email} as ${role}`);
+    okEl.style.cssText="display:block;background:rgba(62,207,178,.1);border:1px solid rgba(62,207,178,.3);border-radius:8px;padding:12px;font-size:13px;color:var(--teal);margin-bottom:12px";
+    okEl.textContent=`✅ Project shared with ${targetUser.display_name||email} as ${role}!`;
+    document.getElementById("share-email").value="";
+    loadShareList(projId);
+    toast("✅ Shared successfully!");
+
+  } catch(e) {
+    errEl.textContent="❌ Error: "+e.message; errEl.style.display="block";
+  } finally {
+    if(btn){ btn.disabled=false; btn.innerHTML="➕ Share with User"; }
+  }
+}
+
+async function removeShare(shareId, projId){
+  await sb.from("it_project_shares").delete().eq("id",shareId);
+  toast("✅ Access removed");
+  loadShareList(projId);
+}
+
+/* ════════════════════════════════════
+   ACTIVITY LOG
+════════════════════════════════════ */
+async function logActivity(projectId, action, description){
+  try {
+    await sb.from("it_activity_log").insert({
+      id:uid(), project_id:projectId, user_id:USER.id,
+      user_name:USER.display_name, user_email:USER.email,
+      action, description, created_at:new Date().toISOString()
+    });
+  } catch(e){ console.warn("Activity log error:", e.message); }
+}
+
+const ACTION_ICONS={ note_added:"📝", note_updated:"✏️", note_deleted:"🗑️", note_pinned:"📌", shared:"👥", project_created:"📂", default:"🔔" };
+const ACTION_COLORS={ note_added:"var(--teal)", note_updated:"var(--blue)", note_deleted:"var(--red)", note_pinned:"var(--gold)", shared:"var(--purple)", project_created:"var(--gold)", default:"var(--muted)" };
+
+async function loadActivityLog(){
+  const el=document.getElementById("activity-feed-list"); if(!el) return;
+  el.innerHTML=`<div class="empty"><span class="spinner"></span></div>`;
+  const {data,error}=await sb.from("it_activity_log").select("*").eq("project_id",ACTIVE_PROJECT.id).order("created_at",{ascending:false}).limit(50);
+  if(error){ el.innerHTML=`<div class="empty"><p style="color:var(--red)">${error.message}</p></div>`; return; }
+  const logs=data||[];
+  if(!logs.length){ el.innerHTML=`<div class="empty"><span class="icon">📋</span><h3>No activity yet</h3><p style="font-size:13px">Actions on this project will appear here</p></div>`; return; }
+  el.innerHTML=`<div class="activity-feed">${logs.map(l=>`
+    <div class="activity-row">
+      <div class="activity-dot" style="background:${ACTION_COLORS[l.action]||ACTION_COLORS.default}"></div>
+      <div style="flex:1">
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:3px">
+          <div class="avatar" style="background:${avColor(l.user_name)};color:#0e0f11;font-size:10px;width:24px;height:24px">${initials(l.user_name)}</div>
+          <span style="font-size:13px;color:var(--text)">${escHtml(l.description)}</span>
+        </div>
+        <div style="font-size:11px;color:var(--muted);margin-left:32px">${fmtDT(l.created_at)}</div>
+      </div>
+      <span style="font-size:18px">${ACTION_ICONS[l.action]||ACTION_ICONS.default}</span>
+    </div>`).join("")}
+  </div>`;
+}
+
+function switchNotesTab(tab, el){
+  document.querySelectorAll(".notes-tab").forEach(t=>t.classList.remove("active"));
+  el.classList.add("active");
+  document.getElementById("notes-panel").style.display = tab==="notes"?"block":"none";
+  document.getElementById("activity-panel").style.display = tab==="activity"?"block":"none";
+  if(tab==="activity") loadActivityLog();
+}
+
+/* ════════════════════════════════════
+   NOTES PAGE
+════════════════════════════════════ */
+async function initNotesPage(){
+  updateDriveUI();
+  renderTagFilter();
+  // Show share button only for owner
+  const isOwner = ACTIVE_PROJECT._isOwner !== false;
+  const isEditor = isOwner || ACTIVE_PROJECT._shareRole==="editor";
+  document.getElementById("notes-share-btn").style.display = isOwner?"inline-flex":"none";
+  document.getElementById("add-note-btn").style.display    = isEditor?"block":"none";
+  document.getElementById("notes-shared-badge").style.display = ACTIVE_PROJECT._isShared?"inline-flex":"none";
+  await loadNotes();
+  if(NOTE_CHANNEL) sb.removeChannel(NOTE_CHANNEL);
+  NOTE_CHANNEL=sb.channel("notes-"+ACTIVE_PROJECT.id)
+    .on("postgres_changes",{event:"*",schema:"public",table:"it_notes",filter:`project_id=eq.${ACTIVE_PROJECT.id}`},async()=>{
+      const {data}=await sb.from("it_notes").select("*").eq("project_id",ACTIVE_PROJECT.id).order("created_at",{ascending:false});
+      NOTES=data||[]; renderNotes();
+    }).subscribe();
+}
+
+async function loadNotes(){
+  document.getElementById("notes-list").innerHTML=`<div class="empty"><span class="spinner"></span></div>`;
+  const {data,error}=await sb.from("it_notes").select("*").eq("project_id",ACTIVE_PROJECT.id).order("created_at",{ascending:false});
+  if(error){ document.getElementById("notes-list").innerHTML=`<div class="empty"><p style="color:var(--red)">${error.message}</p></div>`; return; }
+  NOTES=data||[]; renderNotes();
+}
+
+function renderTagFilter(){
+  const el=document.getElementById("tag-filter"); if(!el) return;
+  el.innerHTML=`<span class="tag" onclick="filterTag(null)" style="background:${!ACTIVE_TAG?"var(--gold)":"transparent"};color:${!ACTIVE_TAG?"#0e0f11":"var(--muted)"};border-color:${!ACTIVE_TAG?"var(--gold)":"var(--border2)"}">All</span>`
+    +TAG_LIST.map(t=>{const c=TAG_COLORS[t];return `<span class="tag" onclick="filterTag('${t}')" style="background:${ACTIVE_TAG===t?c.bg:"transparent"};color:${ACTIVE_TAG===t?c.color:"var(--muted)"};border-color:${ACTIVE_TAG===t?c.border:"var(--border2)"}">${t}</span>`;}).join("");
+}
+function filterTag(t){ACTIVE_TAG=t;renderTagFilter();renderNotes();}
+
+function renderNotes(){
+  const q=(document.getElementById("notes-search")||{}).value?.toLowerCase()||"";
+  const filtered=NOTES.filter(n=>!ACTIVE_TAG||n.tags?.includes(ACTIVE_TAG)).filter(n=>!q||n.note_text?.toLowerCase().includes(q)||n.user_name?.toLowerCase().includes(q)).sort((a,b)=>{ if(a.pinned&&!b.pinned)return -1;if(!a.pinned&&b.pinned)return 1;return 0; });
+  document.getElementById("notes-count").textContent=filtered.length+" note"+(filtered.length!==1?"s":"");
+  const el=document.getElementById("notes-list");
+  if(!filtered.length){ el.innerHTML=`<div class="empty"><span class="icon">📝</span><h3>No notes yet</h3><p style="font-size:13px">Click <strong>+ Add Note</strong> to get started</p></div>`; return; }
+  const isOwner=ACTIVE_PROJECT._isOwner!==false, isEditor=isOwner||ACTIVE_PROJECT._shareRole==="editor";
+  el.innerHTML=filtered.map(n=>{
+    const isDrive=url=>url&&url.startsWith("https://drive.google.com");
+    const audioHtml=n.audio_url?(isDrive(n.audio_url)?`<div class="audio-note"><div style="font-size:11px;color:var(--muted);margin-bottom:7px;display:flex;align-items:center;gap:8px">🎤 VOICE <span class="badge badge-teal" style="font-size:10px">☁️ Drive</span></div><a href="${n.audio_url}" target="_blank" class="btn btn-teal" style="font-size:12px">Open in Drive ↗</a></div>`:`<div class="audio-note"><div style="font-size:11px;color:var(--muted);margin-bottom:7px">🎤 VOICE RECORDING</div><audio controls src="${n.audio_url}" style="width:100%;height:34px"></audio></div>`):"";
+    const drawHtml=n.drawing_url?(isDrive(n.drawing_url)?`<div style="background:var(--card2);border-radius:8px;padding:8px 12px;margin-top:10px;display:flex;align-items:center;gap:10px;font-size:13px;color:var(--soft)">✍️ Drawing <span class="badge badge-teal" style="font-size:10px">☁️ Drive</span> <a href="${n.drawing_url}" target="_blank" style="color:var(--blue);font-size:12px">Open ↗</a></div>`:`<img src="${n.drawing_url}" class="note-img"/>`):"";
+    const tagsHtml=(n.tags||[]).map(t=>{const c=TAG_COLORS[t]||{};return `<span class="tag" style="background:${c.bg};color:${c.color};border-color:${c.border};cursor:default">${t}</span>`;}).join("");
+    const canEdit=isEditor;
+    return `<div class="note-card${n.pinned?" pinned":""}" id="nc-${n.id}">
+      ${n.pinned?`<div style="font-size:11px;font-weight:600;color:var(--gold);margin-bottom:9px;display:flex;align-items:center;gap:5px">📌 Pinned</div>`:""}
+      <div style="display:flex;align-items:center;gap:9px;margin-bottom:11px">
+        <div class="avatar" style="background:${avColor(n.user_name)};color:#0e0f11">${initials(n.user_name)}</div>
+        <div style="flex:1"><div style="font-weight:600;font-size:13px">${escHtml(n.user_name)}</div><div class="ts">${fmtDT(n.created_at)} · ${escHtml(n.user_email||"")}</div></div>
+        ${canEdit?`<div style="position:relative"><button class="btn btn-ghost" style="padding:4px 9px;font-size:17px;line-height:1" onclick="toggleMenu('nm-${n.id}')">⋯</button>
+          <div id="nm-${n.id}" class="menu-popup" style="display:none">
+            <div class="menu-item" onclick="pinNote('${n.id}',${!n.pinned});closeMenus()">${n.pinned?"📌 Unpin":"📌 Pin"}</div>
+            <div class="menu-item" onclick="startEdit('${n.id}');closeMenus()">✏️ Edit</div>
+            <div class="menu-item danger" onclick="deleteNote('${n.id}');closeMenus()">🗑️ Delete</div>
+          </div></div>`:""}
+      </div>
+      <div id="nb-${n.id}"><p style="font-size:14px;line-height:1.78;white-space:pre-wrap;color:var(--text)">${escHtml(n.note_text||"")}</p></div>
+      ${audioHtml}${drawHtml}
+      ${tagsHtml?`<div style="display:flex;gap:6px;margin-top:11px;flex-wrap:wrap">${tagsHtml}</div>`:""}
+    </div>`;
+  }).join("");
+}
+
+function toggleMenu(id){ const m=document.getElementById(id); if(!m) return; const vis=m.style.display!=="none"; closeMenus(); if(!vis){ m.style.display="block"; setTimeout(()=>document.addEventListener("click",function h(){closeMenus();document.removeEventListener("click",h);}),0); } }
+function closeMenus(){ document.querySelectorAll(".menu-popup").forEach(el=>el.style.display="none"); }
+
+async function pinNote(id, pinned){
+  await sb.from("it_notes").update({pinned}).eq("id",id);
+  NOTES=NOTES.map(n=>n.id===id?{...n,pinned}:n); renderNotes();
+  await logActivity(ACTIVE_PROJECT.id,"note_pinned",`${USER.display_name} ${pinned?"pinned":"unpinned"} a note`);
+}
+
+async function deleteNote(id){
+  await sb.from("it_notes").delete().eq("id",id);
+  NOTES=NOTES.filter(n=>n.id!==id); renderNotes();
+  await logActivity(ACTIVE_PROJECT.id,"note_deleted",`${USER.display_name} deleted a note`);
+  toast("🗑 Note deleted");
+}
+
+function startEdit(id){
+  const n=NOTES.find(x=>x.id===id); if(!n) return;
+  const el=document.getElementById("nb-"+id); if(!el) return;
+  el.innerHTML=`<textarea class="input" id="et-${id}" style="min-height:70px;margin-bottom:8px">${escHtml(n.note_text||"")}</textarea><div style="display:flex;gap:6px;justify-content:flex-end"><button class="btn btn-ghost" style="font-size:12px" onclick="renderNotes()">Cancel</button><button class="btn btn-primary" style="font-size:12px" onclick="saveEdit('${id}')">Save</button></div>`;
+}
+
+async function saveEdit(id){
+  const text=document.getElementById("et-"+id)?.value||"";
+  await sb.from("it_notes").update({note_text:text}).eq("id",id);
+  NOTES=NOTES.map(n=>n.id===id?{...n,note_text:text}:n); renderNotes();
+  await logActivity(ACTIVE_PROJECT.id,"note_updated",`${USER.display_name} edited a note`);
+  toast("✅ Note updated");
+}
+
+/* ════════════════════════════════════
+   ADD NOTE MODAL
+════════════════════════════════════ */
+function showAddNote(){
+  _resolvedAudioUrl=null; _resolvedDrawingUrl=null; _selectedTags=[];
+  openModal(`<h3 style="font-family:'Syne',sans-serif;margin-bottom:16px;font-size:17px">Add Note</h3>
+    <textarea id="note-text" class="input" placeholder="Write your thought, meeting notes, idea…" style="min-height:110px;margin-bottom:14px"></textarea>
+    <div style="margin-bottom:14px">
+      <div style="font-size:11px;font-weight:600;color:var(--muted);margin-bottom:8px;letter-spacing:.06em;text-transform:uppercase">Tags</div>
+      <div id="tag-picker" style="display:flex;gap:6px;flex-wrap:wrap">${TAG_LIST.map(t=>`<span class="tag" id="tp-${t}" onclick="toggleNoteTag('${t}')" style="background:transparent;color:var(--muted);border-color:var(--border2)">${t}</span>`).join("")}</div>
+    </div>
+    <div style="display:flex;gap:8px;margin-bottom:14px">
+      <button class="btn btn-surface" style="font-size:12px;flex:1;justify-content:center" onclick="showVoiceRec()">🎤 Voice Note</button>
+      <button class="btn btn-surface" style="font-size:12px;flex:1;justify-content:center" onclick="showDrawCanvas()">✍️ Drawing</button>
+    </div>
+    <div id="attach-preview"></div>
+    <div id="upload-status" style="display:none;background:rgba(66,133,244,.1);border:1px solid rgba(66,133,244,.2);border-radius:8px;padding:10px 12px;margin-bottom:10px;font-size:13px;color:#8ab8f0;align-items:center;gap:8px"><span class="spinner"></span> Uploading to Google Drive…</div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:16px 0 14px"/>
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeModal()">Cancel</button><button class="btn btn-primary btn-lg" onclick="submitNote()">✓ Add Note</button></div>`);
+  setTimeout(()=>document.getElementById("note-text")?.focus(),80);
+}
+
+function toggleNoteTag(t){
+  _selectedTags=_selectedTags.includes(t)?_selectedTags.filter(x=>x!==t):[..._selectedTags,t];
+  TAG_LIST.forEach(tag=>{ const el=document.getElementById("tp-"+tag); if(!el) return; const c=TAG_COLORS[tag]; if(_selectedTags.includes(tag)){el.style.background=c.bg;el.style.color=c.color;el.style.borderColor=c.border;el.innerHTML="✓ "+tag;}else{el.style.background="transparent";el.style.color="var(--muted)";el.style.borderColor="var(--border2)";el.innerHTML=tag;} });
+}
+
+function updateAttachPreview(){
+  const el=document.getElementById("attach-preview"); if(!el) return;
+  const isDrive=url=>url&&url.startsWith("https://drive.google.com");
+  let html="";
+  if(_resolvedAudioUrl) html+=`<div style="background:var(--card2);border-radius:8px;padding:10px 12px;margin-bottom:10px;display:flex;justify-content:space-between;align-items:center;font-size:13px"><span style="color:var(--soft)">🎤 Voice attached ${isDrive(_resolvedAudioUrl)?'<span class="badge badge-teal" style="font-size:10px">☁️ Drive</span>':""}</span><span style="color:var(--red);cursor:pointer;font-weight:600" onclick="_resolvedAudioUrl=null;updateAttachPreview()">Remove</span></div>`;
+  if(_resolvedDrawingUrl) html+=`<div style="margin-bottom:10px">${_resolvedDrawingUrl.startsWith("data:")?`<img src="${_resolvedDrawingUrl}" style="border-radius:8px;max-height:80px;border:1px solid var(--border)">`:`<div style="background:var(--card2);border-radius:8px;padding:8px 12px;font-size:13px;color:var(--soft)">✍️ Drawing <span class="badge badge-teal" style="font-size:10px">☁️ Drive</span></div>`}<br><span style="font-size:11px;color:var(--red);cursor:pointer" onclick="_resolvedDrawingUrl=null;updateAttachPreview()">Remove</span></div>`;
+  el.innerHTML=html;
+}
+
+async function resolveFile(dataUrl, filename, mimeType){
+  if(USER.gdrive_linked&&USER.gdrive_access_token){
+    const upEl=document.getElementById("upload-status"); if(upEl) upEl.style.display="flex";
+    try{ const url=await uploadToGDrive(dataUrl,filename,mimeType); if(upEl) upEl.style.display="none"; return url; }
+    catch(e){ if(upEl) upEl.style.display="none"; toast("Drive upload failed, saved locally"); return dataUrl; }
+  }
+  return dataUrl;
+}
+
+async function submitNote(){
+  const text=(document.getElementById("note-text")||{}).value?.trim()||"";
+  if(!text&&!_resolvedAudioUrl&&!_resolvedDrawingUrl){toast("Write something or attach a file");return;}
+  const note={id:uid(),project_id:ACTIVE_PROJECT.id,user_id:USER.id,user_name:USER.display_name,user_email:USER.email,note_text:text,tags:_selectedTags,pinned:false,audio_url:_resolvedAudioUrl||null,drawing_url:_resolvedDrawingUrl||null,created_at:new Date().toISOString()};
+  const {error}=await sb.from("it_notes").insert(note);
+  if(error){toast("❌ "+error.message);return;}
+  NOTES.unshift(note); renderNotes(); closeModal();
+  await logActivity(ACTIVE_PROJECT.id,"note_added",`${USER.display_name} added a note${_selectedTags.length?" ["+_selectedTags.join(", ")+"]":""}`);
+  toast("✅ Note saved!");
+}
+
+/* ════════════════════════════════════
+   VOICE RECORDER
+════════════════════════════════════ */
+function showVoiceRec(){
+  _audioChunks=[]; _recSec=0;
+  openModal(`<h3 style="font-family:'Syne',sans-serif;margin-bottom:20px">🎤 Voice Recording</h3>
+    <div id="rec-ui" style="text-align:center;padding:16px 0"><div style="font-size:52px;margin-bottom:12px">🎙️</div><p style="color:var(--muted);font-size:13px;margin-bottom:24px">Record a meeting, idea or voice note</p><button class="btn btn-lg" style="background:var(--red);color:#fff" onclick="startRec()">▶ Start Recording</button></div>
+    <hr style="border:none;border-top:1px solid var(--border);margin:16px 0 0"/><div style="text-align:right"><button class="btn btn-ghost" onclick="cancelRec()">Cancel</button></div>`,"modal-sm");
+}
+
+async function startRec(){
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true});
+    _mediaRecorder=new MediaRecorder(stream); _audioChunks=[];
+    _mediaRecorder.ondataavailable=e=>_audioChunks.push(e.data);
+    _mediaRecorder.onstop=()=>{ stream.getTracks().forEach(t=>t.stop()); const blob=new Blob(_audioChunks,{type:"audio/webm"}); const blobUrl=URL.createObjectURL(blob); const fr=new FileReader(); fr.onload=()=>{ window._lastAudioDataUrl=fr.result; showRecDone(blobUrl,_recSec); }; fr.readAsDataURL(blob); };
+    _mediaRecorder.start(); _recSec=0;
+    _recTimer=setInterval(()=>{ _recSec++; const el=document.getElementById("rec-timer"); if(el) el.textContent=fmtSec(_recSec); },1000);
+    document.getElementById("rec-ui").innerHTML=`<div style="display:flex;justify-content:center;align-items:flex-end;gap:2px;height:42px;margin-bottom:14px">${[...Array(16)].map((_,i)=>`<span class="wavebar" style="animation-delay:${i*0.07}s"></span>`).join("")}</div><div style="display:flex;align-items:center;justify-content:center;gap:10px;margin-bottom:24px"><span class="rec-dot"></span><span id="rec-timer" style="font-family:'Syne',sans-serif;font-size:34px;font-weight:700">00:00</span></div><button class="btn btn-surface btn-lg" onclick="stopRec()">⏹ Stop</button>`;
+  }catch(e){toast("Microphone access denied.");}
+}
+const fmtSec=s=>`${String(Math.floor(s/60)).padStart(2,"0")}:${String(s%60).padStart(2,"0")}`;
+function stopRec(){clearInterval(_recTimer);_mediaRecorder?.stop();}
+function cancelRec(){clearInterval(_recTimer);_mediaRecorder?.stop();closeModal();showAddNote();}
+function showRecDone(blobUrl,sec){
+  document.getElementById("rec-ui").innerHTML=`<div style="font-size:42px;margin-bottom:10px">✅</div><p style="font-family:'Syne',sans-serif;font-weight:700;font-size:16px;margin-bottom:6px">Done! (${fmtSec(sec)})</p><audio controls src="${blobUrl}" style="width:100%;margin-bottom:18px;height:36px"></audio><button class="btn btn-primary btn-lg btn-block" onclick="acceptRec('${blobUrl}')">Use this recording</button><button class="btn btn-ghost btn-block" style="margin-top:8px" onclick="showVoiceRec()">Re-record</button>`;
+}
+async function acceptRec(blobUrl){ const dataUrl=window._lastAudioDataUrl; if(!dataUrl){toast("Recording error");return;} closeModal(); _resolvedAudioUrl=await resolveFile(dataUrl,"voice-"+uid()+".webm","audio/webm"); showAddNote(); updateAttachPreview(); }
+
+/* ════════════════════════════════════
+   DRAW CANVAS
+════════════════════════════════════ */
+function showDrawCanvas(){
+  openModal(`<h3 style="font-family:'Syne',sans-serif;margin-bottom:14px">✍️ Quick Drawing</h3>
+    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;align-items:center">
+      ${["#1e2128","#d4a843","#3ecfb2","#e05555","#4a90e2","#222","#fff"].map(c=>`<div onclick="setDrawColor('${c}')" style="width:22px;height:22px;border-radius:50%;background:${c};cursor:pointer;border:2px solid ${c==="#fff"?"#555":"transparent"}"></div>`).join("")}
+      <label style="font-size:12px;color:var(--muted);margin-left:8px">Size</label>
+      <input type="range" min="1" max="20" value="3" oninput="_drawSize=+this.value" style="width:80px">
+      <button class="btn btn-ghost" style="font-size:11px;padding:4px 10px;margin-left:auto" onclick="clearCanvas()">Clear</button>
+    </div>
+    <canvas id="draw-canvas" class="canvas-wrap" width="460" height="280" onmousedown="startDraw(event)" onmousemove="onDraw(event)" onmouseup="endDraw()" onmouseleave="endDraw()" ontouchstart="startDraw(event)" ontouchmove="onDraw(event)" ontouchend="endDraw()"></canvas>
+    <hr style="border:none;border-top:1px solid var(--border);margin:14px 0"/>
+    <div style="display:flex;gap:8px;justify-content:flex-end"><button class="btn btn-ghost" onclick="closeModal();showAddNote()">Cancel</button><button class="btn btn-primary" onclick="acceptDrawing()">Use Drawing</button></div>`,"modal-lg");
+  setTimeout(()=>{ const c=document.getElementById("draw-canvas"); if(!c) return; _drawCtx=c.getContext("2d"); _drawCtx.fillStyle="#ffffff"; _drawCtx.fillRect(0,0,c.width,c.height); _drawCtx.strokeStyle=_drawColor; _drawCtx.lineWidth=_drawSize; _drawCtx.lineCap="round"; },60);
+}
+function setDrawColor(c){ _drawColor=c; if(_drawCtx) _drawCtx.strokeStyle=c; }
+function clearCanvas(){ if(!_drawCtx) return; const c=document.getElementById("draw-canvas"); _drawCtx.fillStyle="#ffffff"; _drawCtx.fillRect(0,0,c.width,c.height); }
+function getPos(e,canvas){ const rect=canvas.getBoundingClientRect(); const touch=e.touches?.[0]; return {x:(touch?touch.clientX:e.clientX)-rect.left,y:(touch?touch.clientY:e.clientY)-rect.top}; }
+function startDraw(e){ e.preventDefault(); _drawing=true; const c=document.getElementById("draw-canvas"); if(!c) return; _lastPos=getPos(e,c); }
+function onDraw(e){ e.preventDefault(); if(!_drawing||!_drawCtx) return; const c=document.getElementById("draw-canvas"); if(!c) return; const pos=getPos(e,c); _drawCtx.strokeStyle=_drawColor; _drawCtx.lineWidth=_drawSize; _drawCtx.beginPath(); _drawCtx.moveTo(_lastPos.x,_lastPos.y); _drawCtx.lineTo(pos.x,pos.y); _drawCtx.stroke(); _lastPos=pos; }
+function endDraw(){ _drawing=false; }
+async function acceptDrawing(){ const c=document.getElementById("draw-canvas"); if(!c) return; const dataUrl=c.toDataURL("image/png"); closeModal(); _resolvedDrawingUrl=await resolveFile(dataUrl,"drawing-"+uid()+".png","image/png"); showAddNote(); updateAttachPreview(); }
+
+</script>
+</body>
+</html>
